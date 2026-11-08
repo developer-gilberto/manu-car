@@ -1,4 +1,7 @@
-import { DEFAULT_MAINTENANCE_ITEM_NAMES } from '@/data/db/default-maintenance-items';
+import {
+  DEFAULT_MAINTENANCE_ITEMS,
+  DEFAULT_MAINTENANCE_ITEM_NAMES,
+} from '@/data/db/default-maintenance-items';
 import { createTestDatabase } from '@/data/db/testing/test-database';
 import type { AppDatabase } from '@/data/db/types';
 import { LogRepository } from '@/data/repositories/log-repository';
@@ -39,8 +42,16 @@ describe('VehicleRepository', () => {
     expect(items).toHaveLength(DEFAULT_MAINTENANCE_ITEM_NAMES.length);
     expect(items.map((item) => item.name)).toEqual([...DEFAULT_MAINTENANCE_ITEM_NAMES]);
     expect(items.every((item) => item.vehicleId === vehicle.id)).toBe(true);
-    expect(items.every((item) => item.intervalKm === null)).toBe(true);
-    expect(items.every((item) => item.intervalMonths === null)).toBe(true);
+    expect(
+      items.map((item) => ({
+        name: item.name,
+        intervalKm: item.intervalKm,
+        intervalMonths: item.intervalMonths,
+      })),
+    ).toEqual([...DEFAULT_MAINTENANCE_ITEMS]);
+    expect(items.every((item) => item.intervalKm !== null || item.intervalMonths !== null)).toBe(
+      true,
+    );
     expect(items.every((item) => item.notifyEnabled)).toBe(true);
     expect(items.every((item) => item.archived)).toBe(false);
   });

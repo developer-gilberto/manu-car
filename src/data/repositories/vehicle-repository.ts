@@ -1,6 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 
-import { DEFAULT_MAINTENANCE_ITEM_NAMES } from '@/data/db/default-maintenance-items';
+import { DEFAULT_MAINTENANCE_ITEMS } from '@/data/db/default-maintenance-items';
 import { maintenanceItems, vehicles } from '@/data/db/schema';
 import type { Vehicle } from '@/data/db/schema';
 import type { AppDatabase } from '@/data/db/types';
@@ -41,9 +41,11 @@ export class VehicleRepository {
 
       tx.insert(maintenanceItems)
         .values(
-          DEFAULT_MAINTENANCE_ITEM_NAMES.map((name) => ({
+          DEFAULT_MAINTENANCE_ITEMS.map((item) => ({
             vehicleId: vehicle.id,
-            name,
+            name: item.name,
+            intervalKm: item.intervalKm,
+            intervalMonths: item.intervalMonths,
           })),
         )
         .run();
