@@ -6,3 +6,4 @@ package-lock.json
 AGENTS.md
 PLAN.md
 assets/
+src/data/db/migrations/

@@ -1,0 +1,15 @@
+export const DEFAULT_MAINTENANCE_ITEM_NAMES = [
+  'óleo do motor',
+  'filtro de óleo',
+  'filtro de ar',
+  'filtro de combustível',
+  'filtro de cabine',
+  'correia dentada',
+  'velas',
+  'pastilhas de freio',
+  'fluido de freio',
+  'líquido de arrefecimento',
+  'rodízio de pneus',
+  'alinhamento/balanceamento',
+  'bateria',
+] as const;
