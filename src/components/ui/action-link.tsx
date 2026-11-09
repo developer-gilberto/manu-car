@@ -1,7 +1,7 @@
 import { Link, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors } from '@/theme';
+import { type Palette, useThemedStyles } from '@/theme';
 
 interface ActionLinkProps {
   href: Href;
@@ -9,6 +9,7 @@ interface ActionLinkProps {
 }
 
 export function ActionLink({ href, label }: ActionLinkProps) {
+  const styles = useThemedStyles(createStyles);
   return (
     <Link asChild href={href}>
       <Pressable hitSlop={8}>
@@ -18,10 +19,11 @@ export function ActionLink({ href, label }: ActionLinkProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  label: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    label: {
+      color: colors.primary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  });

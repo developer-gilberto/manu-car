@@ -1,6 +1,6 @@
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemeColors, useThemedStyles } from '@/theme';
 
 interface SwitchFieldProps {
   label: string;
@@ -17,6 +17,8 @@ export function SwitchField({
   onValueChange,
   disabled = false,
 }: SwitchFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const colors = useThemeColors();
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>
@@ -33,25 +35,26 @@ export function SwitchField({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-  },
-  textContainer: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  label: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  description: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.md,
+      justifyContent: 'space-between',
+    },
+    textContainer: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    description: {
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+  });

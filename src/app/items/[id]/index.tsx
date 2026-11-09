@@ -15,7 +15,7 @@ import { getRepositories } from '@/data/repositories';
 import { refreshScheduledNotifications } from '@/notifications/scheduler';
 import { calcAvgKmPerDay } from '@/domain';
 import { MarkDoneModal, type MarkDoneFormOutput } from '@/forms/mark-done-modal';
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatCents } from '@/utils/currency';
 import { formatDate, formatKm } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
@@ -59,6 +59,7 @@ function formatLastDone(item: MaintenanceItem): string {
 }
 
 export default function ItemDetailScreen() {
+  const styles = useThemedStyles(createStyles);
   const params = useLocalSearchParams<{ id?: string }>();
   const itemId = params.id ? parsePositiveInteger(params.id) : null;
   const repositories = useMemo(() => getRepositories(), []);
@@ -251,96 +252,97 @@ export default function ItemDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  summaryCard: {
-    gap: spacing.md,
-  },
-  summaryHeader: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-  },
-  itemName: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
-    textTransform: 'capitalize',
-  },
-  dueList: {
-    gap: spacing.xs,
-  },
-  dueText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  estimateText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  detailsCard: {
-    gap: spacing.md,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  detailRow: {
-    gap: spacing.xs,
-  },
-  detailLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  detailValue: {
-    color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
-    textTransform: 'capitalize',
-  },
-  historyHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  historyCount: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  logList: {
-    gap: spacing.md,
-  },
-  logCard: {
-    gap: spacing.sm,
-  },
-  logHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  logDate: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  logKm: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  logCost: {
-    color: colors.textMuted,
-    fontSize: 13,
-  },
-  logNotes: {
-    color: colors.text,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    summaryCard: {
+      gap: spacing.md,
+    },
+    summaryHeader: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: spacing.md,
+      justifyContent: 'space-between',
+    },
+    itemName: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 22,
+      fontWeight: '700',
+      textTransform: 'capitalize',
+    },
+    dueList: {
+      gap: spacing.xs,
+    },
+    dueText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    estimateText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    detailsCard: {
+      gap: spacing.md,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    detailRow: {
+      gap: spacing.xs,
+    },
+    detailLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    detailValue: {
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+      textTransform: 'capitalize',
+    },
+    historyHeader: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    historyCount: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    logList: {
+      gap: spacing.md,
+    },
+    logCard: {
+      gap: spacing.sm,
+    },
+    logHeader: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    logDate: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    logKm: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    logCost: {
+      color: colors.textMuted,
+      fontSize: 13,
+    },
+    logNotes: {
+      color: colors.text,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+  });

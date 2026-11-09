@@ -3,9 +3,11 @@ import { StatusBar } from 'expo-status-bar';
 
 import { DatabaseGate } from '@/data/db/database-gate';
 import '@/notifications/notification-handler';
-import { colors } from '@/theme';
+import { useThemeColors } from '@/theme';
 
 export default function RootLayout() {
+  const colors = useThemeColors();
+
   return (
     <DatabaseGate>
       <StatusBar style="auto" />

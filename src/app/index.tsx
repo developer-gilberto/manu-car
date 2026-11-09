@@ -16,7 +16,7 @@ import { getRepositories } from '@/data/repositories';
 import { calcAvgKmPerDay } from '@/domain';
 import { OdometerModal, type OdometerFormOutput } from '@/forms/odometer-modal';
 import { refreshScheduledNotifications } from '@/notifications/scheduler';
-import { colors, radius, spacing } from '@/theme';
+import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
 import { formatDate, formatKm } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
 import {
@@ -27,6 +27,7 @@ import {
 } from '@/utils/maintenance-view';
 
 export default function HomeScreen() {
+  const styles = useThemedStyles(createStyles);
   const repositories = useMemo(() => getRepositories(), []);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
@@ -287,116 +288,117 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  vehicleChips: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  chip: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: colors.white,
-  },
-  vehicleCard: {
-    gap: spacing.lg,
-  },
-  vehicleHeader: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-  },
-  vehicleTitleContainer: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  vehicleName: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  plate: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  label: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  odometer: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  updated: {
-    color: colors.textMuted,
-    fontSize: 12,
-    marginTop: spacing.xs,
-  },
-  itemList: {
-    gap: spacing.md,
-  },
-  itemPressable: {
-    borderRadius: radius.lg,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-  itemCard: {
-    gap: spacing.sm,
-  },
-  itemHeader: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-  },
-  itemName: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    textTransform: 'capitalize',
-  },
-  dueList: {
-    gap: spacing.xs,
-  },
-  dueText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  estimateText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  footerActions: {
-    alignItems: 'flex-start',
-    paddingTop: spacing.sm,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: spacing.md,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    vehicleChips: {
+      gap: spacing.sm,
+      paddingRight: spacing.lg,
+    },
+    chip: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    chipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    chipTextSelected: {
+      color: colors.white,
+    },
+    vehicleCard: {
+      gap: spacing.lg,
+    },
+    vehicleHeader: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: spacing.md,
+      justifyContent: 'space-between',
+    },
+    vehicleTitleContainer: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    vehicleName: {
+      color: colors.text,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    plate: {
+      color: colors.textMuted,
+      fontSize: 13,
+      fontWeight: '600',
+      letterSpacing: 1,
+    },
+    label: {
+      color: colors.textMuted,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    odometer: {
+      color: colors.text,
+      fontSize: 32,
+      fontWeight: '700',
+    },
+    updated: {
+      color: colors.textMuted,
+      fontSize: 12,
+      marginTop: spacing.xs,
+    },
+    itemList: {
+      gap: spacing.md,
+    },
+    itemPressable: {
+      borderRadius: radius.lg,
+    },
+    pressed: {
+      opacity: 0.8,
+    },
+    itemCard: {
+      gap: spacing.sm,
+    },
+    itemHeader: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: spacing.md,
+      justifyContent: 'space-between',
+    },
+    itemName: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '700',
+      textTransform: 'capitalize',
+    },
+    dueList: {
+      gap: spacing.xs,
+    },
+    dueText: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    estimateText: {
+      color: colors.primary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    footerActions: {
+      alignItems: 'flex-start',
+      paddingTop: spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: spacing.md,
+    },
+  });

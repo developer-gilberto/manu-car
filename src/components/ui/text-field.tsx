@@ -1,7 +1,7 @@
 import type { StyleProp, TextInputProps, ViewStyle } from 'react-native';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { type Palette, radius, spacing, useThemeColors, useThemedStyles } from '@/theme';
 
 interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
@@ -18,6 +18,8 @@ export function TextField({
   multiline,
   ...inputProps
 }: TextFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const colors = useThemeColors();
   return (
     <View style={[styles.container, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
@@ -34,40 +36,41 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  multiline: {
-    minHeight: 96,
-    paddingTop: spacing.md,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  hint: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  error: {
-    color: colors.danger,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      color: colors.text,
+      fontSize: 16,
+      minHeight: 48,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    multiline: {
+      minHeight: 96,
+      paddingTop: spacing.md,
+    },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    hint: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    error: {
+      color: colors.danger,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+  });

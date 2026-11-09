@@ -5,3 +5,4 @@ export * from './errors';
 export * from './estimate-due-date';
 export * from './notification-plan';
 export * from './types';
+export * from './backup';

@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
 
 interface FormErrorProps {
   message?: string;
 }
 
 export function FormError({ message }: FormErrorProps) {
+  const styles = useThemedStyles(createStyles);
   if (!message) {
     return null;
   }
@@ -18,16 +19,17 @@ export function FormError({ message }: FormErrorProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.dangerSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
-  },
-  text: {
-    color: colors.danger,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.dangerSoft,
+      borderRadius: radius.md,
+      padding: spacing.md,
+    },
+    text: {
+      color: colors.danger,
+      fontSize: 13,
+      fontWeight: '600',
+      lineHeight: 18,
+    },
+  });

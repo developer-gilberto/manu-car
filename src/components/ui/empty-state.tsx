@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { Button } from './button';
 
 interface EmptyStateProps {
@@ -11,6 +11,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
@@ -20,23 +21,24 @@ export function EmptyState({ title, description, actionLabel, onAction }: EmptyS
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xxl,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  description: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.xxl,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    description: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
+  });

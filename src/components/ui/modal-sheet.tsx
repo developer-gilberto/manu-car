@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
 
 interface ModalSheetProps extends PropsWithChildren {
   visible: boolean;
@@ -19,6 +19,7 @@ interface ModalSheetProps extends PropsWithChildren {
 }
 
 export function ModalSheet({ visible, title, onClose, children }: ModalSheetProps) {
+  const styles = useThemedStyles(createStyles);
   return (
     <Modal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
       <KeyboardAvoidingView
@@ -42,40 +43,41 @@ export function ModalSheet({ visible, title, onClose, children }: ModalSheetProp
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    backgroundColor: colors.overlay,
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    maxHeight: '90%',
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: spacing.md,
-  },
-  title: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  close: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  content: {
-    gap: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    overlay: {
+      backgroundColor: colors.overlay,
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      maxHeight: '90%',
+      paddingBottom: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    header: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingBottom: spacing.md,
+    },
+    title: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 20,
+      fontWeight: '700',
+    },
+    close: {
+      color: colors.primary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    content: {
+      gap: spacing.lg,
+      paddingBottom: spacing.lg,
+    },
+  });

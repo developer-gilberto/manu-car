@@ -9,7 +9,7 @@ import { ModalSheet } from '@/components/ui/modal-sheet';
 import { TextField } from '@/components/ui/text-field';
 import type { Vehicle } from '@/data/db/schema';
 import { createOdometerFormSchema, type OdometerFormValues } from '@/forms/schemas';
-import { colors } from '@/theme';
+import { type Palette, useThemedStyles } from '@/theme';
 import { formatDate, formatKm, parseDateInput, todayDateInput } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
 import { parseNonNegativeInteger } from '@/utils/numbers';
@@ -27,6 +27,7 @@ interface OdometerModalProps {
 }
 
 export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerModalProps) {
+  const styles = useThemedStyles(createStyles);
   const schema = useMemo(() => createOdometerFormSchema(vehicle.odometerKm), [vehicle.odometerKm]);
   const {
     control,
@@ -116,10 +117,11 @@ export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerM
   );
 }
 
-const styles = StyleSheet.create({
-  current: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    current: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+  });

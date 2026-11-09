@@ -7,7 +7,7 @@ import { FormError } from '@/components/ui/form-error';
 import { TextField } from '@/components/ui/text-field';
 import type { Vehicle } from '@/data/db/schema';
 import { vehicleFormSchema, type VehicleFormValues } from '@/forms/schemas';
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { getErrorMessage } from '@/utils/errors';
 
 export interface VehicleFormOutput {
@@ -22,6 +22,7 @@ interface VehicleFormProps {
 }
 
 export function VehicleForm({ vehicle, submitLabel, onSubmit }: VehicleFormProps) {
+  const styles = useThemedStyles(createStyles);
   const {
     control,
     handleSubmit,
@@ -95,13 +96,14 @@ export function VehicleForm({ vehicle, submitLabel, onSubmit }: VehicleFormProps
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.lg,
-  },
-  note: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.lg,
+    },
+    note: {
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 18,
+    },
+  });

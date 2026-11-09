@@ -9,7 +9,7 @@ import { SwitchField } from '@/components/ui/switch-field';
 import { TextField } from '@/components/ui/text-field';
 import type { MaintenanceItem, Vehicle } from '@/data/db/schema';
 import { createItemFormSchema, type ItemFormValues } from '@/forms/schemas';
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatDateInput, parseDateInput } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
 import { parseNonNegativeInteger, parsePositiveInteger } from '@/utils/numbers';
@@ -42,6 +42,7 @@ function getDefaultValues(item?: MaintenanceItem): ItemFormValues {
 }
 
 export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps) {
+  const styles = useThemedStyles(createStyles);
   const schema = useMemo(() => createItemFormSchema(vehicle.odometerKm), [vehicle.odometerKm]);
   const {
     control,
@@ -191,21 +192,22 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.lg,
-  },
-  section: {
-    gap: spacing.md,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  sectionDescription: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.lg,
+    },
+    section: {
+      gap: spacing.md,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    sectionDescription: {
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 18,
+    },
+  });

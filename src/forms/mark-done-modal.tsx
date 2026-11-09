@@ -9,7 +9,7 @@ import { ModalSheet } from '@/components/ui/modal-sheet';
 import { TextField } from '@/components/ui/text-field';
 import type { MaintenanceItem, Vehicle } from '@/data/db/schema';
 import { createMarkDoneFormSchema, type MarkDoneFormValues } from '@/forms/schemas';
-import { colors, spacing } from '@/theme';
+import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatKm, parseDateInput, todayDateInput } from '@/utils/date';
 import { parseCurrencyToCents } from '@/utils/currency';
 import { getErrorMessage } from '@/utils/errors';
@@ -31,6 +31,7 @@ interface MarkDoneModalProps {
 }
 
 export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: MarkDoneModalProps) {
+  const styles = useThemedStyles(createStyles);
   const schema = useMemo(
     () => createMarkDoneFormSchema(vehicle.odometerKm, item.lastDoneKm, item.lastDoneAt),
     [item.lastDoneAt, item.lastDoneKm, vehicle.odometerKm],
@@ -166,16 +167,17 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
   );
 }
 
-const styles = StyleSheet.create({
-  intro: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  note: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: -spacing.sm,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    intro: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    note: {
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 18,
+      marginTop: -spacing.sm,
+    },
+  });

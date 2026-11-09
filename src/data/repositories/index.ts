@@ -1,6 +1,7 @@
 import { getDatabase } from '@/data/db/client';
 import type { AppDatabase } from '@/data/db/types';
 
+import { BackupRepository } from './backup-repository';
 import { LogRepository } from './log-repository';
 import { MaintenanceItemRepository } from './maintenance-item-repository';
 import { NotificationSettingsRepository } from './notification-settings-repository';
@@ -13,6 +14,7 @@ export interface Repositories {
   odometer: OdometerRepository;
   logs: LogRepository;
   notificationSettings: NotificationSettingsRepository;
+  backup: BackupRepository;
 }
 
 export function createRepositories(db: AppDatabase): Repositories {
@@ -22,6 +24,7 @@ export function createRepositories(db: AppDatabase): Repositories {
     odometer: new OdometerRepository(db),
     logs: new LogRepository(db),
     notificationSettings: new NotificationSettingsRepository(),
+    backup: new BackupRepository(db),
   };
 }
 
@@ -30,6 +33,7 @@ export function getRepositories(): Repositories {
 }
 
 export {
+  BackupRepository,
   LogRepository,
   MaintenanceItemRepository,
   NotificationSettingsRepository,

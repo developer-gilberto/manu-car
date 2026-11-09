@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { type Palette, radius, spacing, useThemeColors, useThemedStyles } from '@/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -28,6 +28,8 @@ export function Button({
   loading = false,
   style,
 }: ButtonProps) {
+  const styles = useThemedStyles(createStyles);
+  const colors = useThemeColors();
   const isDisabled = disabled || loading;
 
   return (
@@ -55,52 +57,53 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    alignItems: 'center',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 48,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  primary: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primarySoft,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-    borderColor: colors.border,
-  },
-  danger: {
-    backgroundColor: colors.danger,
-    borderColor: colors.danger,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  primaryLabel: {
-    color: colors.white,
-  },
-  secondaryLabel: {
-    color: colors.primaryDark,
-  },
-  ghostLabel: {
-    color: colors.text,
-  },
-  dangerLabel: {
-    color: colors.white,
-  },
-});
+const createStyles = (colors: Palette) =>
+  StyleSheet.create({
+    base: {
+      alignItems: 'center',
+      borderRadius: radius.md,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 48,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    primary: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    secondary: {
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primarySoft,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      borderColor: colors.border,
+    },
+    danger: {
+      backgroundColor: colors.danger,
+      borderColor: colors.danger,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    primaryLabel: {
+      color: colors.white,
+    },
+    secondaryLabel: {
+      color: colors.primaryDark,
+    },
+    ghostLabel: {
+      color: colors.text,
+    },
+    dangerLabel: {
+      color: colors.white,
+    },
+  });
