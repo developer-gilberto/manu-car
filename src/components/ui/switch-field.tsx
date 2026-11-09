@@ -7,9 +7,16 @@ interface SwitchFieldProps {
   description?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  disabled?: boolean;
 }
 
-export function SwitchField({ label, description, value, onValueChange }: SwitchFieldProps) {
+export function SwitchField({
+  label,
+  description,
+  value,
+  onValueChange,
+  disabled = false,
+}: SwitchFieldProps) {
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>

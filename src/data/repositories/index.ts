@@ -3,6 +3,7 @@ import type { AppDatabase } from '@/data/db/types';
 
 import { LogRepository } from './log-repository';
 import { MaintenanceItemRepository } from './maintenance-item-repository';
+import { NotificationSettingsRepository } from './notification-settings-repository';
 import { OdometerRepository } from './odometer-repository';
 import { VehicleRepository } from './vehicle-repository';
 
@@ -11,6 +12,7 @@ export interface Repositories {
   maintenanceItems: MaintenanceItemRepository;
   odometer: OdometerRepository;
   logs: LogRepository;
+  notificationSettings: NotificationSettingsRepository;
 }
 
 export function createRepositories(db: AppDatabase): Repositories {
@@ -19,6 +21,7 @@ export function createRepositories(db: AppDatabase): Repositories {
     maintenanceItems: new MaintenanceItemRepository(db),
     odometer: new OdometerRepository(db),
     logs: new LogRepository(db),
+    notificationSettings: new NotificationSettingsRepository(),
   };
 }
 
@@ -26,4 +29,10 @@ export function getRepositories(): Repositories {
   return createRepositories(getDatabase());
 }
 
-export { LogRepository, MaintenanceItemRepository, OdometerRepository, VehicleRepository };
+export {
+  LogRepository,
+  MaintenanceItemRepository,
+  NotificationSettingsRepository,
+  OdometerRepository,
+  VehicleRepository,
+};

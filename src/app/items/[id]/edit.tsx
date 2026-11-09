@@ -7,6 +7,7 @@ import { Screen } from '@/components/ui/screen';
 import type { MaintenanceItem, Vehicle } from '@/data/db/schema';
 import { getRepositories } from '@/data/repositories';
 import { ItemForm, type ItemFormOutput } from '@/forms/item-form';
+import { refreshScheduledNotifications } from '@/notifications/scheduler';
 import { getErrorMessage } from '@/utils/errors';
 import { parsePositiveInteger } from '@/utils/numbers';
 
@@ -65,6 +66,7 @@ export default function EditItemScreen() {
     }
 
     repositories.maintenanceItems.update(data.item.id, output);
+    void refreshScheduledNotifications();
 
     if (router.canGoBack()) {
       router.back();

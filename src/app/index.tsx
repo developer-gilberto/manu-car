@@ -15,6 +15,7 @@ import type { MaintenanceItem, OdometerReading, Vehicle } from '@/data/db/schema
 import { getRepositories } from '@/data/repositories';
 import { calcAvgKmPerDay } from '@/domain';
 import { OdometerModal, type OdometerFormOutput } from '@/forms/odometer-modal';
+import { refreshScheduledNotifications } from '@/notifications/scheduler';
 import { colors, radius, spacing } from '@/theme';
 import { formatDate, formatKm } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
@@ -68,6 +69,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
+      // Reavalia os avisos: o tempo passa mesmo sem nenhuma mutação.
+      void refreshScheduledNotifications();
     }, [load]),
   );
 
@@ -110,6 +113,7 @@ export default function HomeScreen() {
       odometerUpdatedAt: readAt,
     });
     load();
+    void refreshScheduledNotifications();
   };
 
   const openNewItem = () => {

@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { WarningBanner } from '@/components/ui/warning-banner';
 import type { MaintenanceItem, MaintenanceLog, Vehicle } from '@/data/db/schema';
 import { getRepositories } from '@/data/repositories';
+import { refreshScheduledNotifications } from '@/notifications/scheduler';
 import { calcAvgKmPerDay } from '@/domain';
 import { MarkDoneModal, type MarkDoneFormOutput } from '@/forms/mark-done-modal';
 import { colors, spacing } from '@/theme';
@@ -132,6 +133,7 @@ export default function ItemDetailScreen() {
       lastDoneKm: output.km,
     });
     load();
+    void refreshScheduledNotifications();
   };
 
   const dueLines = view ? getDueSummary(view) : [];

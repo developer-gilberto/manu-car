@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { DatabaseGate } from '@/data/db/database-gate';
+import '@/notifications/notification-handler';
 import { colors } from '@/theme';
 
 export default function RootLayout() {
