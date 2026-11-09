@@ -14,7 +14,6 @@ export async function ensureAndroidNotificationChannel(): Promise<void> {
     name: 'Lembretes de manutenção',
     description: 'Avisos de manutenção e de atualização do odômetro.',
     importance: AndroidImportance.DEFAULT,
-    sound: 'default',
     vibrationPattern: [0, 250, 250, 250],
     lightColor: colors.primary,
     enableLights: true,
