@@ -11,6 +11,8 @@ import { getRepositories } from '@/data/repositories';
 import {
   cancelScheduledNotifications,
   refreshScheduledNotifications,
+  scheduleTestNotification,
+  TEST_NOTIFICATION_DELAY_SECONDS,
 } from '@/notifications/scheduler';
 import {
   ensureNotificationPermission,
@@ -58,6 +60,22 @@ export default function SettingsScreen() {
       active = false;
     };
   }, [repositories]);
+
+  const handleTestNotification = async () => {
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      await scheduleTestNotification();
+      setMessage(
+        `Teste agendado. A notificação deve aparecer em ${TEST_NOTIFICATION_DELAY_SECONDS} segundos.`,
+      );
+    } catch (error) {
+      setMessage(`Falha no teste: ${getErrorMessage(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleToggle = async (value: boolean) => {
     setBusy(true);
@@ -138,6 +156,21 @@ export default function SettingsScreen() {
         </Text>
         <ActionLink href="/backup" label="Abrir backup" />
       </Card>
+
+      {__DEV__ ? (
+        <Card style={styles.card}>
+          <Text style={styles.title}>Diagnóstico (desenvolvimento)</Text>
+          <Text style={styles.description}>
+            Dispara um aviso de teste em alguns segundos. Não aparece na versão final.
+          </Text>
+          <Button
+            disabled={busy}
+            onPress={() => void handleTestNotification()}
+            title="Enviar notificação de teste"
+            variant="secondary"
+          />
+        </Card>
+      ) : null}
 
       <Card style={styles.card}>
         <Text style={styles.title}>Sobre</Text>

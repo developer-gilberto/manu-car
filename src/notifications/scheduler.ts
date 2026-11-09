@@ -210,3 +210,34 @@ export function refreshScheduledNotifications(
     }
   });
 }
+
+export const TEST_NOTIFICATION_DELAY_SECONDS = 5;
+
+/**
+ * Dispara um aviso de teste em alguns segundos, pelo mesmo canal e formato dos
+ * avisos reais. Uso apenas em desenvolvimento, para validar permissão e canal.
+ */
+export async function scheduleTestNotification(): Promise<void> {
+  const permission = await getNotificationPermissionInfo();
+
+  if (permission.state !== 'granted') {
+    throw new Error('Permissão de notificações não concedida.');
+  }
+
+  await ensureAndroidNotificationChannel();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Teste de notificação',
+      body: 'Se você está lendo isto, os avisos do Manu Car estão funcionando.',
+      data: { kind: 'test' },
+      sound: 'default',
+      color: colors.primary,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: TEST_NOTIFICATION_DELAY_SECONDS,
+      channelId: ANDROID_NOTIFICATION_CHANNEL_ID,
+    },
+  });
+}
