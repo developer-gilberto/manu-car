@@ -173,7 +173,7 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
         name="notifyEnabled"
         render={({ field }) => (
           <SwitchField
-            description="Os lembretes automáticos entram em uma próxima fase."
+            description="Recebe aviso de vencimento. Só funciona com os lembretes ativados em Ajustes."
             label="Lembrar deste item"
             onValueChange={field.onChange}
             value={field.value}

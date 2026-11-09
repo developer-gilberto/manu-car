@@ -207,7 +207,7 @@ export default function ItemDetailScreen() {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Lembrete</Text>
               <Text style={styles.detailValue}>
-                {data.item.notifyEnabled ? 'Ativado (em breve)' : 'Desativado'}
+                {data.item.notifyEnabled ? 'Ativado' : 'Desativado'}
               </Text>
             </View>
           </Card>
