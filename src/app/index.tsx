@@ -1,16 +1,16 @@
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionLink } from '@/components/ui/action-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconLink } from '@/components/ui/icon-link';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { WarningBanner } from '@/components/ui/warning-banner';
 import type { MaintenanceItem, OdometerReading, Vehicle } from '@/data/db/schema';
 import { getRepositories } from '@/data/repositories';
 import { calcAvgKmPerDay } from '@/domain';
@@ -25,6 +25,20 @@ import {
   getEstimatedLabel,
   sortMaintenanceViews,
 } from '@/utils/maintenance-view';
+
+function HomeHeaderTitle() {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.headerTitle}>
+      <Image
+        accessibilityIgnoresInvertColors
+        source={require('../../assets/icons/icon-ManuCar.png')}
+        style={styles.headerIcon}
+      />
+      <Text style={styles.headerTitleText}>ManuCar</Text>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const styles = useThemedStyles(createStyles);
@@ -136,8 +150,13 @@ export default function HomeScreen() {
     <Screen scroll>
       <Stack.Screen
         options={{
-          headerRight: () => <ActionLink href="/settings" label="Ajustes" />,
-          title: 'Manu Car',
+          headerRight: () => (
+            <View style={styles.headerActions}>
+              <IconLink accessibilityLabel="Novo veículo" href="/vehicles/new" icon="plus" />
+              <IconLink accessibilityLabel="Configurações" href="/settings" icon="settings" />
+            </View>
+          ),
+          headerTitle: () => <HomeHeaderTitle />,
         }}
       />
 
@@ -208,8 +227,6 @@ export default function HomeScreen() {
             <Button onPress={() => setOdometerVisible(true)} title="Atualizar odômetro" />
           </Card>
 
-          <WarningBanner />
-
           <SectionHeader
             action={
               <ActionLink
@@ -217,7 +234,8 @@ export default function HomeScreen() {
                   pathname: '/items/new',
                   params: { vehicleId: String(selectedVehicle.id) },
                 }}
-                label="+ Novo item"
+                icon="plus"
+                label="Novo item"
               />
             }
             subtitle={`${views.length} item${views.length === 1 ? '' : 's'} acompanhado${views.length === 1 ? '' : 's'}`}
@@ -269,10 +287,6 @@ export default function HomeScreen() {
               })}
             </View>
           )}
-
-          <View style={styles.footerActions}>
-            <ActionLink href="/vehicles/new" label="+ Novo veículo" />
-          </View>
         </>
       )}
 
@@ -290,6 +304,21 @@ export default function HomeScreen() {
 
 const createStyles = (colors: Palette) =>
   StyleSheet.create({
+    headerTitle: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    headerIcon: {
+      borderRadius: 6,
+      height: 28,
+      width: 28,
+    },
+    headerTitleText: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: '600',
+    },
     vehicleChips: {
       gap: spacing.sm,
       paddingRight: spacing.lg,
@@ -391,9 +420,9 @@ const createStyles = (colors: Palette) =>
       fontSize: 12,
       fontWeight: '600',
     },
-    footerActions: {
-      alignItems: 'flex-start',
-      paddingTop: spacing.sm,
+    headerActions: {
+      flexDirection: 'row',
+      gap: spacing.lg,
     },
     errorText: {
       color: colors.danger,

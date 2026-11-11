@@ -1,52 +1,44 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
 
 import type { MaintenanceStatus } from '@/domain';
-import { type Palette, radius, spacing, useThemeColors, useThemedStyles } from '@/theme';
+import { type Palette, useThemeColors } from '@/theme';
 import { statusLabel } from '@/utils/maintenance-view';
 
 interface StatusBadgeProps {
   status: MaintenanceStatus;
 }
 
-function statusStyles(colors: Palette) {
+type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
+
+const STATUS_ICONS: Record<MaintenanceStatus, FeatherIconName> = {
+  ok: 'check-circle',
+  atencao: 'alert-triangle',
+  vencido: 'alert-circle',
+};
+
+function statusColors(colors: Palette): Record<MaintenanceStatus, string> {
   return {
-    ok: {
-      backgroundColor: colors.successSoft,
-      color: colors.success,
-    },
-    atencao: {
-      backgroundColor: colors.warningSoft,
-      color: colors.warning,
-    },
-    vencido: {
-      backgroundColor: colors.dangerSoft,
-      color: colors.danger,
-    },
-  } as const;
+    ok: colors.success,
+    atencao: colors.warning,
+    vencido: colors.danger,
+  };
 }
 
+/** Ícone de status. O texto fica só como rótulo de acessibilidade. */
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
-  const statusStyle = statusStyles(colors)[status];
 
   return (
-    <View style={[styles.badge, { backgroundColor: statusStyle.backgroundColor }]}>
-      <Text style={[styles.label, { color: statusStyle.color }]}>{statusLabel(status)}</Text>
+    <View accessibilityLabel={statusLabel(status)} accessibilityRole="image" style={styles.badge}>
+      <Feather color={statusColors(colors)[status]} name={STATUS_ICONS[status]} size={22} />
     </View>
   );
 }
 
-const createStyles = (colors: Palette) =>
-  StyleSheet.create({
-    badge: {
-      alignSelf: 'flex-start',
-      borderRadius: radius.full,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-    },
-    label: {
-      fontSize: 12,
-      fontWeight: '700',
-    },
-  });
+const styles = StyleSheet.create({
+  badge: {
+    alignSelf: 'flex-start',
+    padding: 2,
+  },
+});
