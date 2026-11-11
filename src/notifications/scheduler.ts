@@ -229,7 +229,7 @@ export async function scheduleTestNotification(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Teste de notificação',
-      body: 'Se você está lendo isto, os avisos do Manu Car estão funcionando.',
+      body: 'Se você está lendo isto, os avisos do ManuCar estão funcionando.',
       data: { kind: 'test' },
       sound: 'default',
       color: colors.primary,

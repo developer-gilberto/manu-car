@@ -6,7 +6,7 @@ export function WelcomeScreen() {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Olá, Manu Car!</Text>
+      <Text style={styles.title}>Olá, ManuCar!</Text>
       <Text style={styles.subtitle}>Seus lembretes de manutenção veicular.</Text>
     </View>
   );

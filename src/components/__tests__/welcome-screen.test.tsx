@@ -6,7 +6,7 @@ describe('WelcomeScreen', () => {
   it('exibe a saudação do app', async () => {
     await render(<WelcomeScreen />);
 
-    expect(screen.getByText('Olá, Manu Car!')).toBeOnTheScreen();
+    expect(screen.getByText('Olá, ManuCar!')).toBeOnTheScreen();
     expect(screen.getByText('Seus lembretes de manutenção veicular.')).toBeOnTheScreen();
   });
 });

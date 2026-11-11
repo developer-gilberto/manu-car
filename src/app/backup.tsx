@@ -53,7 +53,7 @@ export default function BackupScreen() {
     try {
       const backup = buildBackup(repositories.backup.exportData(), new Date().toISOString());
       const result = await Share.share({
-        title: 'Backup Manu Car',
+        title: 'Backup ManuCar',
         message: serializeBackup(backup),
       });
 

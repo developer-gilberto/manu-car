@@ -176,7 +176,7 @@ export function parseBackup(text: string): ParseBackupResult {
   }
 
   if (typeof raw !== 'object' || raw === null || !('schemaVersion' in raw)) {
-    return fail('NOT_A_BACKUP', 'Este texto não parece um backup do Manu Car.');
+    return fail('NOT_A_BACKUP', 'Este texto não parece um backup do ManuCar.');
   }
 
   const version = (raw as { schemaVersion: unknown }).schemaVersion;

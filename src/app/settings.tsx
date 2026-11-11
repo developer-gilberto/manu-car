@@ -135,7 +135,7 @@ export default function SettingsScreen() {
           <View style={styles.warning}>
             <Text style={styles.warningTitle}>Notificações bloqueadas</Text>
             <Text style={styles.warningText}>
-              Você negou a permissão de notificações para o Manu Car. Libere-a nas configurações do
+              Você negou a permissão de notificações para o ManuCar. Libere-a nas configurações do
               sistema para receber os lembretes.
             </Text>
             <Button
@@ -175,7 +175,7 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <Text style={styles.title}>Sobre</Text>
         <Text style={styles.description}>
-          Manu Car 1.0.0{'\n'}
+          ManuCar 1.0.0{'\n'}
           Seus lembretes de manutenção veicular, offline e no seu bolso.
         </Text>
         <Text style={styles.note}>

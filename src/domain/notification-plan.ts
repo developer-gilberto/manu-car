@@ -120,7 +120,7 @@ export function createWeeklyOdometerNotification(): WeeklyOdometerNotificationPl
     type: 'weekly-odometer',
     key: WEEKLY_ODOMETER_NOTIFICATION_KEY,
     title: 'Atualize a quilometragem do carro',
-    body: 'Abra o Manu Car e informe o odômetro atual para manter os lembretes de manutenção em dia.',
+    body: 'Abra o ManuCar e informe o odômetro atual para manter os lembretes de manutenção em dia.',
     weekday: WEEKLY_ODOMETER_WEEKDAY,
     hour: WEEKLY_ODOMETER_HOUR,
     minute: WEEKLY_ODOMETER_MINUTE,
