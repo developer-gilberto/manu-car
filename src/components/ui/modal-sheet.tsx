@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
 
 interface ModalSheetProps extends PropsWithChildren {
@@ -20,14 +22,15 @@ interface ModalSheetProps extends PropsWithChildren {
 
 export function ModalSheet({ visible, title, onClose, children }: ModalSheetProps) {
   const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   return (
     <Modal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.overlay}
       >
         <Pressable accessibilityLabel="Fechar" onPress={onClose} style={StyleSheet.absoluteFill} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: spacing.xl + insets.bottom }]}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
             <Pressable hitSlop={8} onPress={onClose}>
