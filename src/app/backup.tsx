@@ -1,11 +1,12 @@
 import { Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Share, StyleSheet, Text, View } from 'react-native';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
-import { TextField } from '@/components/ui/text-field';
 import { getRepositories } from '@/data/repositories';
 import {
   buildBackup,
@@ -19,6 +20,7 @@ import {
 } from '@/domain/backup';
 import { refreshScheduledNotifications } from '@/notifications/scheduler';
 import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
+import { BACKUP_MIME_TYPES, buildBackupFileName } from '@/utils/backup-file';
 import { formatDate } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
 
@@ -39,7 +41,6 @@ function summaryLines(summary: BackupSummary): string[] {
 export default function BackupScreen() {
   const styles = useThemedStyles(createStyles);
   const repositories = useMemo(() => getRepositories(), []);
-  const [pastedText, setPastedText] = useState('');
   const [parseError, setParseError] = useState<BackupError | null>(null);
   const [valid, setValid] = useState<ValidBackup | null>(null);
   const [currentSummary, setCurrentSummary] = useState<BackupSummary | null>(null);
@@ -52,14 +53,29 @@ export default function BackupScreen() {
 
     try {
       const backup = buildBackup(repositories.backup.exportData(), new Date().toISOString());
-      const result = await Share.share({
-        title: 'Backup ManuCar',
-        message: serializeBackup(backup),
-      });
+      const now = new Date();
+      const file = new File(Paths.cache, buildBackupFileName(now));
 
-      if (result.action === Share.sharedAction) {
-        setMessage('Backup exportado. Guarde o conteúdo compartilhado em um lugar seguro.');
+      // Sobrescreve a versão anterior do mesmo dia, se existir.
+      if (file.exists) {
+        file.delete();
       }
+
+      file.create();
+      file.write(serializeBackup(backup));
+
+      if (!(await Sharing.isAvailableAsync())) {
+        setMessage(
+          `Não há como compartilhar arquivos neste aparelho. O backup está em ${file.uri}.`,
+        );
+        return;
+      }
+
+      await Sharing.shareAsync(file.uri, {
+        dialogTitle: 'Salvar backup do ManuCar',
+        mimeType: 'application/json',
+        UTI: 'public.json',
+      });
     } catch (error) {
       setMessage(`Não foi possível exportar o backup: ${getErrorMessage(error)}`);
     } finally {
@@ -67,12 +83,8 @@ export default function BackupScreen() {
     }
   };
 
-  const handleValidate = () => {
-    setMessage(null);
-    setValid(null);
-    setParseError(null);
-
-    const result: ParseBackupResult = parseBackup(pastedText);
+  const validateBackupText = (text: string) => {
+    const result: ParseBackupResult = parseBackup(text);
 
     if (!result.ok) {
       setParseError(result.error);
@@ -93,6 +105,27 @@ export default function BackupScreen() {
       },
       summary: summarizeBackup(backup),
     });
+  };
+
+  const handlePickFile = async () => {
+    setMessage(null);
+    setValid(null);
+    setParseError(null);
+    setBusy(true);
+
+    try {
+      const picked = await File.pickFileAsync({ mimeTypes: BACKUP_MIME_TYPES });
+
+      if (picked.canceled) {
+        return;
+      }
+
+      validateBackupText(await picked.result.text());
+    } catch (error) {
+      setMessage(`Não foi possível ler o arquivo: ${getErrorMessage(error)}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const confirmImport = () => {
@@ -123,7 +156,6 @@ export default function BackupScreen() {
       setValid(null);
       setParseError(null);
       setCurrentSummary(null);
-      setPastedText('');
       setMessage('Backup importado. Seus dados foram restaurados.');
       await refreshScheduledNotifications();
     } catch (error) {
@@ -142,8 +174,8 @@ export default function BackupScreen() {
       <Card style={styles.card}>
         <Text style={styles.title}>Exportar</Text>
         <Text style={styles.description}>
-          Gera um JSON com todos os seus veículos, itens, registros e leituras de odômetro. Escolha
-          onde salvar pelo menu de compartilhamento.
+          Gera um arquivo JSON com todos os seus veículos, itens, registros e leituras de odômetro.
+          Escolha onde salvá-lo (Downloads, Google Drive etc.) no menu que aparecer.
         </Text>
         <Button disabled={busy} onPress={() => void handleExport()} title="Exportar backup" />
       </Card>
@@ -151,26 +183,13 @@ export default function BackupScreen() {
       <Card style={styles.card}>
         <Text style={styles.title}>Importar</Text>
         <Text style={styles.description}>
-          Cole aqui o conteúdo JSON de um backup. O arquivo é validado antes de qualquer alteração.
-          A importação substitui todos os dados atuais.
+          Escolha um arquivo de backup (.json) salvo anteriormente. O arquivo é validado antes de
+          qualquer alteração. A importação substitui todos os dados atuais.
         </Text>
-        <TextField
-          autoCapitalize="none"
-          autoCorrect={false}
-          label="Conteúdo do backup"
-          multiline
-          onChangeText={(text) => {
-            setPastedText(text);
-            setValid(null);
-            setParseError(null);
-          }}
-          placeholder='{"schemaVersion": 1, ...}'
-          value={pastedText}
-        />
         <Button
-          disabled={busy || pastedText.trim() === ''}
-          onPress={handleValidate}
-          title="Validar backup"
+          disabled={busy}
+          onPress={() => void handlePickFile()}
+          title="Escolher arquivo de backup"
           variant="secondary"
         />
 

@@ -1,4 +1,5 @@
 import {
+  assertOdometerReadingFits,
   calcAvgKmPerDay,
   InvalidDateError,
   InvalidOdometerError,
@@ -200,5 +201,56 @@ describe('calcAvgKmPerDay', () => {
     expect(() =>
       calcAvgKmPerDay([reading(Number.POSITIVE_INFINITY, '2026-03-31T12:00:00.000Z')], now),
     ).toThrow(InvalidOdometerError);
+  });
+});
+
+describe('assertOdometerReadingFits', () => {
+  it('aceita uma leitura nova em ordem crescente', () => {
+    expect(() =>
+      assertOdometerReadingFits(
+        [reading(1_000, '2026-03-30T12:00:00.000Z')],
+        reading(1_100, '2026-03-31T12:00:00.000Z'),
+      ),
+    ).not.toThrow();
+  });
+
+  it('aceita uma inserção retroativa compatível', () => {
+    expect(() =>
+      assertOdometerReadingFits(
+        [reading(1_000, '2026-03-30T12:00:00.000Z'), reading(1_100, '2026-04-01T12:00:00.000Z')],
+        reading(1_050, '2026-03-31T12:00:00.000Z'),
+      ),
+    ).not.toThrow();
+  });
+
+  it('rejeita uma inserção retroativa acima da leitura seguinte', () => {
+    expect(() =>
+      assertOdometerReadingFits(
+        [reading(1_000, '2026-03-30T12:00:00.000Z'), reading(1_100, '2026-04-01T12:00:00.000Z')],
+        reading(1_200, '2026-03-31T12:00:00.000Z'),
+      ),
+    ).toThrow(OdometerDecreasedError);
+  });
+
+  it('rejeita uma inserção retroativa abaixo da leitura anterior', () => {
+    expect(() =>
+      assertOdometerReadingFits(
+        [reading(1_000, '2026-03-30T12:00:00.000Z'), reading(1_100, '2026-04-01T12:00:00.000Z')],
+        reading(900, '2026-03-31T12:00:00.000Z'),
+      ),
+    ).toThrow(OdometerDecreasedError);
+  });
+
+  it('não bloqueia uma leitura nova por causa de inconsistência antiga distante', () => {
+    expect(() =>
+      assertOdometerReadingFits(
+        [
+          reading(1_000, '2026-03-30T12:00:00.000Z'),
+          reading(900, '2026-03-31T12:00:00.000Z'),
+          reading(1_100, '2026-04-01T12:00:00.000Z'),
+        ],
+        reading(1_200, '2026-04-02T12:00:00.000Z'),
+      ),
+    ).not.toThrow();
   });
 });

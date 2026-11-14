@@ -1,6 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 
-import { maintenanceItems } from '@/data/db/schema';
+import { maintenanceItems, vehicles } from '@/data/db/schema';
 import type { MaintenanceItem } from '@/data/db/schema';
 import type { AppDatabase } from '@/data/db/types';
 
@@ -11,6 +11,9 @@ export interface CreateMaintenanceItemInput {
   intervalMonths?: number | null;
   lastDoneKm?: number | null;
   lastDoneAt?: string | null;
+  /** Uso interno (restauração de backup). Normalmente derivado do veículo. */
+  baselineKm?: number | null;
+  baselineAt?: string | null;
   notifyEnabled?: boolean;
   archived?: boolean;
 }
@@ -29,6 +32,15 @@ export class MaintenanceItemRepository {
   constructor(private readonly db: AppDatabase) {}
 
   create(input: CreateMaintenanceItemInput): MaintenanceItem {
+    const vehicle = this.db.select().from(vehicles).where(eq(vehicles.id, input.vehicleId)).get();
+
+    if (!vehicle) {
+      throw new Error('Veículo não encontrado para criar o item de manutenção.');
+    }
+
+    const baselineKm = input.baselineKm ?? input.lastDoneKm ?? vehicle.odometerKm;
+    const baselineAt = input.baselineAt ?? input.lastDoneAt ?? vehicle.odometerUpdatedAt;
+
     const [item] = this.db
       .insert(maintenanceItems)
       .values({
@@ -38,6 +50,8 @@ export class MaintenanceItemRepository {
         intervalMonths: input.intervalMonths ?? null,
         lastDoneKm: input.lastDoneKm ?? null,
         lastDoneAt: input.lastDoneAt ?? null,
+        baselineKm,
+        baselineAt,
         notifyEnabled: input.notifyEnabled ?? true,
         archived: input.archived ?? false,
       })

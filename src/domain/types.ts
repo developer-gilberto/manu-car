@@ -8,6 +8,12 @@ export interface MaintenanceItemSnapshot {
   intervalMonths: number | null;
   lastDoneKm: number | null;
   lastDoneAt: string | null;
+  /**
+   * Referência fixa (não recalculada a cada leitura do odômetro) usada para
+   * contar o intervalo quando o item nunca foi feito.
+   */
+  baselineKm: number | null;
+  baselineAt: string | null;
 }
 
 export interface OdometerReadingSnapshot {

@@ -114,6 +114,8 @@ describe('BackupRepository', () => {
           intervalMonths: null,
           lastDoneKm: null,
           lastDoneAt: null,
+          baselineKm: null,
+          baselineAt: null,
           notifyEnabled: true,
           archived: false,
         },

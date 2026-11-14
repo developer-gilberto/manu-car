@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
 /** Versão atual do formato de backup. Incremente ao mudar o formato. */
-export const BACKUP_SCHEMA_VERSION = 1;
+export const BACKUP_SCHEMA_VERSION = 2;
+
+const SUPPORTED_BACKUP_VERSIONS = [1, 2] as const;
 
 const isoDateTime = z.iso.datetime({ message: 'data ISO 8601 inválida' });
 const nonNegativeInt = z
@@ -25,7 +27,7 @@ const odometerReadingSchema = z.object({
   readAt: isoDateTime,
 });
 
-const maintenanceItemSchema = z.object({
+const maintenanceItemSchemaV1 = z.object({
   id: positiveId,
   vehicleId: positiveId,
   name: z.string().trim().min(1, 'nome vazio').max(80),
@@ -35,6 +37,11 @@ const maintenanceItemSchema = z.object({
   lastDoneAt: isoDateTime.nullable(),
   notifyEnabled: z.boolean(),
   archived: z.boolean(),
+});
+
+const maintenanceItemSchemaV2 = maintenanceItemSchemaV1.extend({
+  baselineKm: nonNegativeInt.nullable(),
+  baselineAt: isoDateTime.nullable(),
 });
 
 const maintenanceLogSchema = z.object({
@@ -47,22 +54,32 @@ const maintenanceLogSchema = z.object({
 });
 
 export const backupV1Schema = z.object({
+  schemaVersion: z.literal(1),
+  exportedAt: isoDateTime,
+  vehicles: z.array(vehicleSchema),
+  odometerReadings: z.array(odometerReadingSchema),
+  maintenanceItems: z.array(maintenanceItemSchemaV1),
+  maintenanceLogs: z.array(maintenanceLogSchema),
+});
+
+export const backupV2Schema = z.object({
   schemaVersion: z.literal(BACKUP_SCHEMA_VERSION),
   exportedAt: isoDateTime,
   vehicles: z.array(vehicleSchema),
   odometerReadings: z.array(odometerReadingSchema),
-  maintenanceItems: z.array(maintenanceItemSchema),
+  maintenanceItems: z.array(maintenanceItemSchemaV2),
   maintenanceLogs: z.array(maintenanceLogSchema),
 });
 
 export type BackupV1 = z.infer<typeof backupV1Schema>;
+export type BackupV2 = z.infer<typeof backupV2Schema>;
 export type BackupVehicle = z.infer<typeof vehicleSchema>;
 export type BackupOdometerReading = z.infer<typeof odometerReadingSchema>;
-export type BackupMaintenanceItem = z.infer<typeof maintenanceItemSchema>;
+export type BackupMaintenanceItem = z.infer<typeof maintenanceItemSchemaV2>;
 export type BackupMaintenanceLog = z.infer<typeof maintenanceLogSchema>;
 
 /** Conteúdo do banco, sem metadados de versão. */
-export type BackupData = Omit<BackupV1, 'schemaVersion' | 'exportedAt'>;
+export type BackupData = Omit<BackupV2, 'schemaVersion' | 'exportedAt'>;
 
 export type BackupErrorCode =
   'INVALID_JSON' | 'NOT_A_BACKUP' | 'UNSUPPORTED_VERSION' | 'INVALID_CONTENT' | 'INTEGRITY';
@@ -73,7 +90,7 @@ export interface BackupError {
   details: string[];
 }
 
-export type ParseBackupResult = { ok: true; backup: BackupV1 } | { ok: false; error: BackupError };
+export type ParseBackupResult = { ok: true; backup: BackupV2 } | { ok: false; error: BackupError };
 
 export interface BackupSummary {
   exportedAt: string;
@@ -85,7 +102,57 @@ export interface BackupSummary {
 
 const MAX_DETAILS = 5;
 
-export function buildBackup(data: BackupData, exportedAt: string): BackupV1 {
+/** Primeira leitura de cada veículo, usada para reconstruir o baseline em backups v1. */
+function earliestReadingsByVehicle(
+  readings: readonly BackupOdometerReading[],
+): Map<number, BackupOdometerReading> {
+  const earliest = new Map<number, BackupOdometerReading>();
+
+  for (const reading of readings) {
+    const current = earliest.get(reading.vehicleId);
+
+    if (
+      !current ||
+      reading.readAt < current.readAt ||
+      (reading.readAt === current.readAt && reading.id < current.id)
+    ) {
+      earliest.set(reading.vehicleId, reading);
+    }
+  }
+
+  return earliest;
+}
+
+/**
+ * Backups v1 não tinham baseline. Reconstruímos a referência a partir do que
+ * existir de mais antigo (última execução > primeira leitura > estado do
+ * veículo), para que o item nunca passe a vencer "do zero" a cada leitura.
+ */
+function upgradeV1ToV2(backup: BackupV1): BackupV2 {
+  const vehiclesById = new Map(backup.vehicles.map((vehicle) => [vehicle.id, vehicle]));
+  const earliestReadings = earliestReadingsByVehicle(backup.odometerReadings);
+
+  return {
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    exportedAt: backup.exportedAt,
+    vehicles: backup.vehicles,
+    odometerReadings: backup.odometerReadings,
+    maintenanceItems: backup.maintenanceItems.map((item) => {
+      const vehicle = vehiclesById.get(item.vehicleId);
+      const earliestReading = earliestReadings.get(item.vehicleId);
+
+      return {
+        ...item,
+        baselineKm: item.lastDoneKm ?? earliestReading?.km ?? vehicle?.odometerKm ?? null,
+        baselineAt:
+          item.lastDoneAt ?? earliestReading?.readAt ?? vehicle?.odometerUpdatedAt ?? null,
+      };
+    }),
+    maintenanceLogs: backup.maintenanceLogs,
+  };
+}
+
+export function buildBackup(data: BackupData, exportedAt: string): BackupV2 {
   return {
     schemaVersion: BACKUP_SCHEMA_VERSION,
     exportedAt,
@@ -96,7 +163,7 @@ export function buildBackup(data: BackupData, exportedAt: string): BackupV1 {
   };
 }
 
-export function serializeBackup(backup: BackupV1): string {
+export function serializeBackup(backup: BackupV2): string {
   return JSON.stringify(backup, null, 2);
 }
 
@@ -181,33 +248,51 @@ export function parseBackup(text: string): ParseBackupResult {
 
   const version = (raw as { schemaVersion: unknown }).schemaVersion;
 
-  if (version !== BACKUP_SCHEMA_VERSION) {
+  if (version !== 1 && version !== 2) {
     return fail(
       'UNSUPPORTED_VERSION',
-      `Versão de backup desconhecida (${String(version)}). Este app lê apenas a versão ${BACKUP_SCHEMA_VERSION}. Atualize o app para importar este arquivo.`,
+      `Versão de backup desconhecida (${String(version)}). Este app lê as versões ${SUPPORTED_BACKUP_VERSIONS.join(' e ')}. Atualize o app para importar este arquivo.`,
     );
   }
 
-  const parsed = backupV1Schema.safeParse(raw);
+  let backup: BackupV2;
 
-  if (!parsed.success) {
-    return fail(
-      'INVALID_CONTENT',
-      'O backup tem campos inválidos.',
-      describeZodIssues(parsed.error),
-    );
+  if (version === 1) {
+    const parsedV1 = backupV1Schema.safeParse(raw);
+
+    if (!parsedV1.success) {
+      return fail(
+        'INVALID_CONTENT',
+        'O backup tem campos inválidos.',
+        describeZodIssues(parsedV1.error),
+      );
+    }
+
+    backup = upgradeV1ToV2(parsedV1.data);
+  } else {
+    const parsedV2 = backupV2Schema.safeParse(raw);
+
+    if (!parsedV2.success) {
+      return fail(
+        'INVALID_CONTENT',
+        'O backup tem campos inválidos.',
+        describeZodIssues(parsedV2.error),
+      );
+    }
+
+    backup = parsedV2.data;
   }
 
-  const problems = findBackupIntegrityProblems(parsed.data);
+  const problems = findBackupIntegrityProblems(backup);
 
   if (problems.length > 0) {
     return fail('INTEGRITY', 'O backup tem referências quebradas.', problems.slice(0, MAX_DETAILS));
   }
 
-  return { ok: true, backup: parsed.data };
+  return { ok: true, backup };
 }
 
-export function summarizeBackup(backup: BackupV1): BackupSummary {
+export function summarizeBackup(backup: BackupV2): BackupSummary {
   return {
     exportedAt: backup.exportedAt,
     vehicles: backup.vehicles.length,

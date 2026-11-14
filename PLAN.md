@@ -104,6 +104,8 @@ Rode typecheck, lint e testes, faça o commit e pare.
 
 ### Fase 3: Telas
 
+> Ajuste posterior: máscaras de entrada (data, quilometragem, custo, placa) aplicadas aos formulários. Ver README, seção "Máscaras de entrada".
+
 1. **Home:** lista de itens ordenada por urgência, com badge de status e "faltam X km / Y dias".
 2. **Detalhe do item:** histórico de execuções e botão "Marcar como feito" (pede km, data, custo, observação).
 3. **Atualizar odômetro:** modal rápido, acessível da Home.
@@ -128,10 +130,10 @@ o fluxo completo manualmente.
 
 ### Fase 4: Notificações
 
-- Pedir permissão no momento certo (não no primeiro boot).
+- Pedir permissão de notificações na primeira abertura do app, uma única vez (decisão revista após o plano original, que previa pedir só ao ativar os lembretes). Os lembretes ficam ativados por padrão.
 - Agendar notificação local na data de vencimento/estimada de cada item.
 - **Reagendar tudo** quando: odômetro muda, item é marcado como feito, item é editado.
-- Lembrete semanal fixo: "Atualize a quilometragem do carro".
+- Lembrete semanal "Atualize a quilometragem do carro", com dia da semana e horário configuráveis (padrão: segunda-feira, 09:00).
 - Canal Android configurado; permissão negada tratada com aviso claro na UI.
 
 **Aceite:** teste manual em dispositivo real (notificações não são confiáveis em emulador); testes unitários da função que gera o plano de agendamento.
@@ -146,7 +148,7 @@ unitários); (2) o módulo que aplica esse plano com expo-notifications,
 cancelando tudo e reagendando. Reagendar quando: odômetro muda, item
 é marcado como feito, item é editado. Adicionar lembrete semanal
 "Atualize a quilometragem do carro". Configurar canal Android. Pedir
-permissão apenas quando o usuário ativar lembretes, e tratar
+permissão de notificações na primeira abertura (uma vez), e tratar
 permissão negada com aviso e atalho para as configurações do sistema.
 Rode typecheck, lint e testes, faça o commit e me diga o que preciso
 testar no celular real.
@@ -155,6 +157,7 @@ testar no celular real.
 ### Fase 5: Acabamento
 
 - Exportar/importar backup em JSON (validado com zod, sem sobrescrever dados às cegas).
+- Implementado com arquivo: a exportação gera `manucar-backup-DD-MM-AAAA_EPOCH.json` e abre o menu de compartilhamento; a importação usa o seletor de arquivos (`expo-file-system` e `expo-sharing`). A colagem de texto foi removida.
 - Modo escuro, estados vazios, tratamento de erro.
 - Ícone e splash.
 

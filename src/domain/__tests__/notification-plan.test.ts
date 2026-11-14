@@ -28,6 +28,8 @@ function makeItem(
     intervalMonths: null,
     lastDoneKm: 45_000,
     lastDoneAt: null,
+    baselineKm: 45_000,
+    baselineAt: null,
     notifyEnabled: true,
     archived: false,
     ...overrides,
@@ -155,6 +157,24 @@ describe('buildNotificationPlan', () => {
     ]);
   });
 
+  it('agenda item nunca feito a partir do baseline imutável', () => {
+    const plan = buildNotificationPlan(
+      [makeItem({ lastDoneKm: null, lastDoneAt: null, baselineKm: 45_000 })],
+      vehicle,
+      NOW,
+      { avgKmPerDay: 100, includeWeeklyReminder: false },
+    );
+
+    expect(maintenanceEntries(plan)).toEqual([
+      expect.objectContaining({
+        scheduledDate: '2026-03-06',
+        estimated: true,
+        overdue: false,
+        status: 'ok',
+      }),
+    ]);
+  });
+
   it('ignora itens arquivados, desativados ou sem intervalos', () => {
     const plan = buildNotificationPlan(
       [
@@ -200,6 +220,29 @@ describe('buildNotificationPlan', () => {
       type: 'weekly-odometer',
       key: 'weekly-odometer',
       title: 'Atualize a quilometragem do carro',
+      weekday: 2,
+      hour: 9,
+      minute: 0,
+    });
+  });
+
+  it('usa o dia e o horário configurados no lembrete semanal', () => {
+    const plan = buildNotificationPlan([], vehicle, NOW, {
+      weeklyReminder: { weekday: 6, hour: 18, minute: 30 },
+    });
+
+    expect(plan).toEqual([
+      expect.objectContaining({
+        type: 'weekly-odometer',
+        weekday: 6,
+        hour: 18,
+        minute: 30,
+      }),
+    ]);
+  });
+
+  it('normaliza um lembrete semanal inválido para o padrão', () => {
+    expect(createWeeklyOdometerNotification({ weekday: 9, hour: 25, minute: 70 })).toMatchObject({
       weekday: 2,
       hour: 9,
       minute: 0,

@@ -12,6 +12,13 @@ import { createItemFormSchema, type ItemFormValues } from '@/forms/schemas';
 import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatDateInput, parseDateInput } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
+import {
+  kmToInput,
+  maskDateInput,
+  maskKmInput,
+  maskMonthsInput,
+  unmaskDigits,
+} from '@/utils/input-masks';
 import { parseNonNegativeInteger, parsePositiveInteger } from '@/utils/numbers';
 
 export interface ItemFormOutput {
@@ -33,9 +40,9 @@ interface ItemFormProps {
 function getDefaultValues(item?: MaintenanceItem): ItemFormValues {
   return {
     name: item?.name ?? '',
-    intervalKm: item?.intervalKm?.toString() ?? '',
+    intervalKm: kmToInput(item?.intervalKm),
     intervalMonths: item?.intervalMonths?.toString() ?? '',
-    lastDoneKm: item?.lastDoneKm?.toString() ?? '',
+    lastDoneKm: kmToInput(item?.lastDoneKm),
     lastDoneAt: item?.lastDoneAt ? formatDateInput(item.lastDoneAt) : '',
     notifyEnabled: item?.notifyEnabled ?? true,
   };
@@ -58,10 +65,16 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
     try {
       await onSubmit({
         name: values.name.trim(),
-        intervalKm: values.intervalKm === '' ? null : parsePositiveInteger(values.intervalKm),
+        intervalKm:
+          values.intervalKm === '' ? null : parsePositiveInteger(unmaskDigits(values.intervalKm)),
         intervalMonths:
-          values.intervalMonths === '' ? null : parsePositiveInteger(values.intervalMonths),
-        lastDoneKm: values.lastDoneKm === '' ? null : parseNonNegativeInteger(values.lastDoneKm),
+          values.intervalMonths === ''
+            ? null
+            : parsePositiveInteger(unmaskDigits(values.intervalMonths)),
+        lastDoneKm:
+          values.lastDoneKm === ''
+            ? null
+            : parseNonNegativeInteger(unmaskDigits(values.lastDoneKm)),
         lastDoneAt: values.lastDoneAt === '' ? null : parseDateInput(values.lastDoneAt),
         notifyEnabled: values.notifyEnabled,
       });
@@ -104,6 +117,7 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
               hint="Opcional. Ex.: 10000."
               keyboardType="number-pad"
               label="Intervalo em km"
+              mask={maskKmInput}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="10000"
@@ -120,6 +134,7 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
               hint="Opcional. Ex.: 6."
               keyboardType="number-pad"
               label="Intervalo em meses"
+              mask={maskMonthsInput}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="6"
@@ -132,7 +147,8 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Última manutenção</Text>
         <Text style={styles.sectionDescription}>
-          Se ainda não fez, deixe em branco para contar a partir do odômetro atual.
+          Se ainda não fez, deixe em branco. A contagem começa no odômetro/data em que o item foi
+          criado e não muda ao atualizar o odômetro.
         </Text>
         <Controller
           control={control}
@@ -143,6 +159,7 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
               hint={`Odômetro atual: ${vehicle.odometerKm} km.`}
               keyboardType="number-pad"
               label="Km da última manutenção"
+              mask={maskKmInput}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="Ex.: 45000"
@@ -158,7 +175,9 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
               autoCorrect={false}
               error={errors.lastDoneAt?.message}
               hint="Opcional. Formato DD/MM/AAAA."
+              keyboardType="number-pad"
               label="Data da última manutenção"
+              mask={maskDateInput}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="01/09/2026"

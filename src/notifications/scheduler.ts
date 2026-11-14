@@ -149,6 +149,7 @@ export function refreshScheduledNotifications(
 
       const vehicles = repositories.vehicles.list();
       const entries: NotificationPlanEntry[] = [];
+      const weeklyReminder = await repositories.notificationSettings.getWeeklyReminder();
 
       for (const vehicle of vehicles) {
         const items = repositories.maintenanceItems.listByVehicle(vehicle.id);
@@ -167,6 +168,8 @@ export function refreshScheduledNotifications(
               intervalMonths: item.intervalMonths,
               lastDoneKm: item.lastDoneKm,
               lastDoneAt: item.lastDoneAt,
+              baselineKm: item.baselineKm,
+              baselineAt: item.baselineAt,
               notifyEnabled: item.notifyEnabled,
               archived: item.archived,
             })),
@@ -184,7 +187,7 @@ export function refreshScheduledNotifications(
 
       // Lembrete semanal de odômetro: uma única vez, se houver algum veículo.
       if (vehicles.length > 0) {
-        entries.push(createWeeklyOdometerNotification());
+        entries.push(createWeeklyOdometerNotification(weeklyReminder));
       }
 
       await cancelAll();

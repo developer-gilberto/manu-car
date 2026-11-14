@@ -13,6 +13,13 @@ import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatKm, parseDateInput, todayDateInput } from '@/utils/date';
 import { parseCurrencyToCents } from '@/utils/currency';
 import { getErrorMessage } from '@/utils/errors';
+import {
+  kmToInput,
+  maskCurrencyInput,
+  maskDateInput,
+  maskKmInput,
+  unmaskDigits,
+} from '@/utils/input-masks';
 import { parseNonNegativeInteger } from '@/utils/numbers';
 
 export interface MarkDoneFormOutput {
@@ -44,7 +51,7 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
     formState: { errors, isSubmitting },
   } = useForm<MarkDoneFormValues>({
     defaultValues: {
-      km: String(vehicle.odometerKm),
+      km: kmToInput(vehicle.odometerKm),
       date: todayDateInput(),
       cost: '',
       notes: '',
@@ -55,7 +62,7 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
   useEffect(() => {
     if (visible) {
       reset({
-        km: String(vehicle.odometerKm),
+        km: kmToInput(vehicle.odometerKm),
         date: todayDateInput(),
         cost: '',
         notes: '',
@@ -64,7 +71,7 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
   }, [reset, vehicle.odometerKm, visible]);
 
   const submit = handleSubmit(async (values) => {
-    const km = parseNonNegativeInteger(values.km);
+    const km = parseNonNegativeInteger(unmaskDigits(values.km));
     const doneAt = parseDateInput(values.date);
 
     if (km === null || !doneAt) {
@@ -99,6 +106,7 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
             error={errors.km?.message}
             keyboardType="number-pad"
             label="Km da manutenção"
+            mask={maskKmInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="Ex.: 52000"
@@ -114,7 +122,9 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
             autoCorrect={false}
             error={errors.date?.message}
             hint="Formato DD/MM/AAAA."
+            keyboardType="number-pad"
             label="Data da manutenção"
+            mask={maskDateInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="08/11/2026"
@@ -128,9 +138,10 @@ export function MarkDoneModal({ item, vehicle, visible, onClose, onSubmit }: Mar
         render={({ field }) => (
           <TextField
             error={errors.cost?.message}
-            hint="Opcional. Ex.: 250,00."
-            keyboardType="decimal-pad"
+            hint="Opcional. Digite os centavos: 25000 vira R$ 250,00."
+            keyboardType="number-pad"
             label="Custo"
+            mask={maskCurrencyInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="R$ 0,00"

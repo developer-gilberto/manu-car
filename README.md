@@ -40,7 +40,7 @@ O aplicativo usa **notificações locais** (geradas pelo próprio aparelho, sem 
 
 ## 6. Exportação e importação de dados
 
-Quando você exporta seus dados, o arquivo é gerado no seu aparelho e compartilhado somente por você, pelos meios que escolher. Ao importar um arquivo, o conteúdo é validado e gravado apenas no banco local. Não há envio automático de nenhum arquivo.
+Quando você exporta seus dados, o aplicativo gera um arquivo JSON no seu aparelho e abre o menu de compartilhamento do sistema, para você salvá-lo onde quiser. Ao importar, você escolhe o arquivo pelo seletor do sistema; o aplicativo lê somente esse arquivo, valida o conteúdo e grava apenas no banco local. Não há envio automático de nenhum arquivo.
 
 ## 7. Compartilhamento com terceiros
 
@@ -106,41 +106,42 @@ App mobile pessoal que lembra o usuário das manutenções do carro (troca de ó
 13. [Testes](#testes)
 14. [Permissões](#permissões)
 15. [Convenções do projeto](#convenções-do-projeto)
-16. [Roadmap e status](#roadmap-e-status)
-17. [Limitações conhecidas](#limitações-conhecidas)
-18. [Documentação adicional](#documentação-adicional)
 
 ---
 
 ## Funcionalidades
 
 - **Veículos**: cadastro e edição (nome, placa). Odômetro inicial 0 km. Suporte a mais de um veículo, com seletor na Home.
-- **Odômetro**: atualização da quilometragem atual por um modal. O app não aceita valor menor que o atual.
+- **Odômetro**: atualização da quilometragem atual por um modal. Leituras com data anterior são aceitas se o km for compatível com o histórico; apenas a leitura mais recente atualiza o odômetro do veículo.
 - **Itens de manutenção**: 13 itens padrão criados junto com cada veículo (óleo, filtros, correia dentada, velas, freios, bateria etc.). É possível criar, editar e configurar intervalo por km, por meses, ou ambos.
-- **Status por item**: `ok`, `atencao` (faltam pouco) e `vencido`, com badge colorido. A lista da Home é ordenada por urgência.
+- **Status por item**: `ok`, `atencao` (faltam pouco) e `vencido`, com badge colorido. A lista da Home é ordenada por urgência. Itens que nunca foram feitos recebem o selo "Nunca feito".
 - **Previsão**: quando há histórico de quilometragem, o app estima a data do próximo vencimento pela média de km rodados por dia (janela de 90 dias).
 - **Marcar como feito**: registra data, km, custo (opcional, em centavos) e observações. Atualiza a base de cálculo do próximo vencimento.
 - **Histórico**: registros de execução de cada item na tela de detalhe.
-- **Lembretes**: notificações locais por item e um lembrete semanal de atualização do odômetro (segunda-feira, 09:00).
-- **Configurações**: ativar/desativar lembretes, tratamento de permissão negada, backup, sobre e aviso sobre intervalos genéricos.
+- **Excluir item**: na tela de detalhe, com confirmação. Apaga o item e todo o seu histórico (cascata no banco) e refaz os lembretes. Para apenas silenciar os avisos, use a opção de lembrete na edição.
+- **Lembretes**: notificações locais por item e um lembrete semanal de atualização do odômetro. O dia da semana e o horário do lembrete semanal são configuráveis em Configurações (padrão: segunda-feira, 09:00).
+- **Toque na notificação**: abre o detalhe do item de manutenção ou a Home no lembrete semanal e no aviso de teste.
+- **Máscaras de entrada**: data, quilometragem, custo, placa e campos numéricos são formatados enquanto o usuário digita.
+- **Configurações**: ativar/desativar lembretes (ativos por padrão), tratamento de permissão negada, backup, sobre e aviso sobre intervalos genéricos.
 - **Modo escuro**: segue o tema do sistema.
 
 ---
 
 ## Stack
 
-| Área | Tecnologia |
-| --- | --- |
-| Framework | Expo SDK 58 + React Native 0.88 + React 19 |
-| Linguagem | TypeScript (modo `strict`, sem `any`) |
-| Navegação | Expo Router (rotas por arquivo) |
-| Banco | expo-sqlite + Drizzle ORM |
-| Notificações | expo-notifications |
-| Formulários | react-hook-form + @hookform/resolvers |
-| Validação | zod |
-| Testes | Jest + jest-expo + @testing-library/react-native |
-| Qualidade | ESLint (eslint-config-expo) + Prettier |
-| Build | EAS Build |
+| Área         | Tecnologia                                       |
+| ------------ | ------------------------------------------------ |
+| Framework    | Expo SDK 58 + React Native 0.88 + React 19       |
+| Linguagem    | TypeScript (modo `strict`, sem `any`)            |
+| Navegação    | Expo Router (rotas por arquivo)                  |
+| Banco        | expo-sqlite + Drizzle ORM                        |
+| Notificações | expo-notifications                               |
+| Formulários  | react-hook-form + @hookform/resolvers            |
+| Validação    | zod                                              |
+| Testes       | Jest + jest-expo + @testing-library/react-native |
+| Arquivos     | expo-file-system + expo-sharing (backup)         |
+| Qualidade    | ESLint (eslint-config-expo) + Prettier           |
+| Build        | EAS Build                                        |
 
 ---
 
@@ -175,23 +176,25 @@ npm run android
 
 Depois de instalado, use `npm start` e abra o app com o dev client.
 
+Ao adicionar um pacote com código nativo (por exemplo `expo-sharing`), o recarregamento do Metro não basta: é preciso gerar de novo o build com `npm run android`. Um APK antigo não tem o módulo e mostra o erro `Cannot find native module`. Não é necessário desinstalar o app antes, desde que a assinatura seja a mesma.
+
 ---
 
 ## Scripts disponíveis
 
-| Script | Função |
-| --- | --- |
-| `npm start` | Inicia o Metro (Expo) |
-| `npm run android` | Gera e executa o build nativo Android (`expo run:android`) |
-| `npm run ios` | Gera e executa o build nativo iOS (`expo run:ios`) |
-| `npm run web` | Inicia a versão web (não é alvo do produto) |
-| `npm run typecheck` | Verificação de tipos (`tsc --noEmit`) |
-| `npm run lint` | ESLint |
-| `npm test` | Executa a suíte Jest |
-| `npm run test:watch` | Jest em modo watch |
-| `npm run format` | Formata o projeto com Prettier |
-| `npm run format:check` | Verifica formatação sem alterar arquivos |
-| `npm run db:generate` | Gera nova migration Drizzle a partir do schema |
+| Script                 | Função                                                     |
+| ---------------------- | ---------------------------------------------------------- |
+| `npm start`            | Inicia o Metro (Expo)                                      |
+| `npm run android`      | Gera e executa o build nativo Android (`expo run:android`) |
+| `npm run ios`          | Gera e executa o build nativo iOS (`expo run:ios`)         |
+| `npm run web`          | Inicia a versão web (não é alvo do produto)                |
+| `npm run typecheck`    | Verificação de tipos (`tsc --noEmit`)                      |
+| `npm run lint`         | ESLint                                                     |
+| `npm test`             | Executa a suíte Jest                                       |
+| `npm run test:watch`   | Jest em modo watch                                         |
+| `npm run format`       | Formata o projeto com Prettier                             |
+| `npm run format:check` | Verifica formatação sem alterar arquivos                   |
+| `npm run db:generate`  | Gera nova migration Drizzle a partir do schema             |
 
 Antes de cada commit de fase, o projeto deve passar em `typecheck`, `lint` e `test`.
 
@@ -201,10 +204,10 @@ Antes de cada commit de fase, o projeto deve passar em `typecheck`, `lint` e `te
 
 O arquivo `eas.json` define dois perfis:
 
-| Perfil | Saída | Uso |
-| --- | --- | --- |
-| `preview` | APK (`distribution: internal`) | Instalação direta para testes |
-| `production` | AAB (`app-bundle`) | Envio à Google Play |
+| Perfil       | Saída                          | Uso                           |
+| ------------ | ------------------------------ | ----------------------------- |
+| `preview`    | APK (`distribution: internal`) | Instalação direta para testes |
+| `production` | AAB (`app-bundle`)             | Envio à Google Play           |
 
 ```bash
 eas login
@@ -263,25 +266,28 @@ manu-car/
 ├── assets/                   # Ícones e imagens
 └── src/
     ├── app/                  # Rotas do Expo Router
-    │   ├── _layout.tsx       # Stack + DatabaseGate + handler de notificações
+    │   ├── _layout.tsx       # Stack + DatabaseGate + handlers de notificações
     │   ├── index.tsx         # Home
     │   ├── settings.tsx      # Configurações
     │   ├── backup.tsx        # Exportar e importar dados
     │   ├── items/            # new.tsx, [id]/index.tsx, [id]/edit.tsx
     │   └── vehicles/         # new.tsx, [id]/edit.tsx
     ├── components/ui/        # Button, Card, TextField, ModalSheet, StatusBadge,
-    │                         # WarningBanner, EmptyState etc.
+    │                         # WarningBanner, EmptyState, NeverDoneBadge etc.
     ├── forms/                # schemas.ts (zod), item-form, vehicle-form,
-    │                         # odometer-modal, mark-done-modal
+    │                         # odometer-modal, mark-done-modal, weekly-reminder-modal
     ├── domain/               # Regras puras + testes
     ├── data/
     │   ├── db/               # client.ts, schema.ts, migrations/, database-gate.tsx,
     │   │                     # default-maintenance-items.ts, testing/
     │   └── repositories/     # Um arquivo por entidade + index.ts
     ├── notifications/        # scheduler.ts, permissions.ts, android-channel.ts,
-    │                         # notification-handler.ts
+    │                         # notification-handler.ts, notification-response-handler.tsx,
+    │                         # notification-target.ts, initial-permission.ts,
+    │                         # initial-permission-prompt.tsx
     ├── utils/                # date.ts, currency.ts, numbers.ts, errors.ts,
-    │                         # maintenance-view.ts
+    │                         # maintenance-view.ts, weekly-reminder.ts, input-masks.ts,
+    │                         # backup-file.ts
     ├── types/                # Declaração de módulos (*.sql)
     └── theme.ts              # Paletas claro/escuro e helpers de estilo
 ```
@@ -294,11 +300,20 @@ A pasta `src/store/` existe, mas está vazia. O Zustand previsto no `AGENTS.md` 
 
 Todas em `src/domain/`, com testes de borda.
 
+### Referência (baseline): `src/domain/baseline.ts`
+
+A contagem do intervalo parte de uma referência:
+
+- **Por km**: `últimoFeitoKm ?? baselineKm ?? odômetroAtual`.
+- **Por tempo**: `últimoFeitoEm ?? baselineEm ?? odômetroAtualizadoEm`.
+
+O `baselineKm`/`baselineEm` é gravado uma única vez, na criação do item, e não muda quando o odômetro é atualizado. Por isso, num item que nunca foi feito, cada nova leitura não empurra o vencimento. Veículos e itens antigos sem baseline usam o fallback do veículo.
+
 ### Próximo vencimento: `calcNextDue(item, vehicle)`
 
-- **Por km**: `vencimentoKm = (últimoFeitoKm ?? odômetroAtual) + intervaloKm`.
-- **Por tempo**: `vencimentoData = últimoFeitoEm ?? odômetroAtualizadoEm`, somado a `intervaloMeses`. Se o dia não existir no mês de destino, usa o último dia do mês.
-- Lança `OdometerDecreasedError` se o odômetro atual for menor que o km do último serviço.
+- **Por km**: `vencimentoKm = referênciaKm + intervaloKm`.
+- **Por tempo**: `vencimentoData = referênciaEm`, somado a `intervaloMeses`. Se o dia não existir no mês de destino, usa o último dia do mês.
+- Lança `OdometerDecreasedError` se o odômetro atual for menor que a referência de km.
 
 ### Status: `calcStatus(item, vehicle, now)`
 
@@ -321,14 +336,30 @@ Todas em `src/domain/`, com testes de borda.
 ### Plano de notificações: `buildNotificationPlan(items, vehicle, now, opts)`
 
 - Para cada item ativo com lembrete, escolhe a data mais próxima entre o vencimento por tempo e a previsão por km.
-- Gera título e corpo, e acrescenta o lembrete semanal.
+- Gera título e corpo, e acrescenta o lembrete semanal no dia e horário configurados (`weeklyReminder`, padrão segunda-feira 09:00; valores inválidos voltam ao padrão).
 
 ### Validação de formulários (`src/forms/schemas.ts`)
 
-- Odômetro não pode diminuir.
+- Odômetro não pode diminuir entre leituras. Leituras com data anterior são aceitas se o km for compatível com as leituras vizinhas; somente a leitura mais recente atualiza o odômetro do veículo.
 - O km do último serviço não pode ser maior que o odômetro atual.
 - Datas no formato `DD/MM/AAAA`, não podem estar no futuro.
 - Custo digitado em reais é convertido para centavos (`parseCurrencyToCents`).
+- Os campos com máscara guardam o texto formatado. O schema remove a formatação (`unmaskDigits`) antes de validar e converter.
+
+### Máscaras de entrada (`src/utils/input-masks.ts`)
+
+A prop `mask` do `TextField` formata o texto a cada alteração. As funções são puras:
+
+| Campo                                          | Máscara                      | Exemplo                   |
+| ---------------------------------------------- | ---------------------------- | ------------------------- |
+| Quilometragem (odômetro, intervalo, última km) | Separador de milhar          | `52000` → `52.000`        |
+| Datas (leitura, manutenção, última manutenção) | `DD/MM/AAAA`                 | `08112026` → `08/11/2026` |
+| Custo                                          | Centavos em reais            | `25000` → `R$ 250,00`     |
+| Placa                                          | Maiúsculas, até 7 caracteres | `abc1d23` → `ABC1D23`     |
+| Intervalo em meses                             | Até 3 dígitos                | `12` → `12`               |
+| Hora e minuto do lembrete semanal              | Até 2 dígitos                | `9` → `9`                 |
+
+Nomes, observações e nome do veículo são texto livre e não têm máscara.
 
 ---
 
@@ -336,25 +367,25 @@ Todas em `src/domain/`, com testes de borda.
 
 SQLite local, gerenciado por expo-sqlite e Drizzle. As chaves estrangeiras são ativadas com `PRAGMA foreign_keys`. As migrations rodam na inicialização, pelo `DatabaseGate`.
 
-| Tabela | Colunas principais | Observações |
-| --- | --- | --- |
-| `vehicles` | `id`, `name`, `plate?`, `odometer_km`, `odometer_updated_at` | Odômetro atual fica aqui |
-| `odometer_readings` | `id`, `vehicle_id` (FK), `km`, `read_at` | Histórico de leituras, usado na média diária |
-| `maintenance_items` | `id`, `vehicle_id` (FK), `name`, `interval_km?`, `interval_months?`, `last_done_km?`, `last_done_at?`, `notify_enabled`, `archived` | Cascade ao excluir veículo |
-| `maintenance_logs` | `id`, `item_id` (FK), `done_at`, `km`, `cost_cents?`, `notes?` | Histórico de execuções |
+| Tabela              | Colunas principais                                                                                                                                                  | Observações                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `vehicles`          | `id`, `name`, `plate?`, `odometer_km`, `odometer_updated_at`                                                                                                        | Odômetro atual fica aqui                                |
+| `odometer_readings` | `id`, `vehicle_id` (FK), `km`, `read_at`                                                                                                                            | Histórico de leituras, usado na média diária            |
+| `maintenance_items` | `id`, `vehicle_id` (FK), `name`, `interval_km?`, `interval_months?`, `last_done_km?`, `last_done_at?`, `baseline_km?`, `baseline_at?`, `notify_enabled`, `archived` | Cascade ao excluir veículo. Baseline gravado na criação |
+| `maintenance_logs`  | `id`, `item_id` (FK), `done_at`, `km`, `cost_cents?`, `notes?`                                                                                                      | Histórico de execuções                                  |
 
-Migrations atuais: `src/data/db/migrations/0000_warm_sway.sql`.
+Migrations atuais: `0000_warm_sway.sql` (esquema inicial) e `0001_bitter_zarda.sql` (adiciona `baseline_km`/`baseline_at` e preenche os itens existentes com a primeira leitura ou o odômetro do veículo).
 
 ### Repositórios
 
-| Repositório | Métodos |
-| --- | --- |
-| `VehicleRepository` | `create` (transação, cria o veículo e os 13 itens padrão), `list`, `getById`, `update`, `delete` |
-| `MaintenanceItemRepository` | `create`, `listByVehicle`, `getById`, `update`, `delete` |
-| `OdometerRepository` | `create`, `listByVehicle`, `getById`, `latestForVehicle`, `update`, `delete` |
-| `LogRepository` | `create`, `listByItem`, `getById`, `update`, `delete` |
-| `NotificationSettingsRepository` | `isEnabled`, `setEnabled` (usa `expo-sqlite/kv-store`, não o Drizzle) |
-| `BackupRepository` | `exportData`, `replaceAll` (apaga tudo e regrava numa transação) |
+| Repositório                      | Métodos                                                                                                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VehicleRepository`              | `create` (transação, cria o veículo e os 13 itens padrão), `list`, `getById`, `update`, `delete`                                                                   |
+| `MaintenanceItemRepository`      | `create`, `listByVehicle`, `getById`, `update`, `delete`                                                                                                           |
+| `OdometerRepository`             | `create`, `listByVehicle`, `getById`, `latestForVehicle`, `update`, `delete`                                                                                       |
+| `LogRepository`                  | `create`, `listByItem`, `getById`, `update`, `delete`                                                                                                              |
+| `NotificationSettingsRepository` | `isEnabled`, `setEnabled`, `hasPromptedPermission`, `markPermissionPrompted`, `getWeeklyReminder`, `setWeeklyReminder` (usa `expo-sqlite/kv-store`, não o Drizzle) |
+| `BackupRepository`               | `exportData`, `replaceAll` (apaga tudo e regrava numa transação)                                                                                                   |
 
 Acesso via `getRepositories()` (`src/data/repositories/index.ts`), criado com `createRepositories(db)`.
 
@@ -364,9 +395,10 @@ Acesso via `getRepositories()` (`src/data/repositories/index.ts`), criado com `c
 
 - Canal Android dedicado (`android-channel.ts`).
 - O agendador (`scheduler.ts`) mantém uma fila: cancela os lembretes anteriores e agenda os novos a partir do plano.
-- A permissão é pedida **somente** ao ativar os lembretes em Configurações. Se for negada, o app mostra um aviso com atalho para as configurações do sistema.
-- Os lembretes são reagendados ao ganhar foco na Home.
+- Os lembretes vêm **ativados por padrão** (`isEnabled` é `true` enquanto a configuração nunca foi gravada). Na primeira abertura, o app pede a permissão de notificações uma única vez (`initial-permission.ts`). Se o usuário negar, os lembretes são desligados e ele pode religá-los em Configurações, onde um aviso mostra como liberar a permissão no sistema. Quem desligou manualmente os lembretes não recebe o pedido.
+- Os lembretes são reagendados ao ganhar foco na Home e ao salvar um novo dia/horário do lembrete semanal.
 - Notificação de teste disponível em Configurações, apenas em modo de desenvolvimento (`__DEV__`).
+- Ao tocar em uma notificação, o app navega: manutenção abre o detalhe do item; lembrete semanal, aviso de teste e dados ausentes ou inválidos caem na Home. A resposta é limpa depois de tratada para não repetir a navegação.
 
 ---
 
@@ -374,11 +406,12 @@ Acesso via `getRepositories()` (`src/data/repositories/index.ts`), criado com `c
 
 Tela `src/app/backup.tsx`.
 
-- **Exportar**: gera um JSON versionado (`schemaVersion: 1`) com todos os dados e abre o compartilhamento nativo.
-- **Importar**: o usuário cola o JSON em um campo de texto. O conteúdo é validado com zod e pela integridade referencial (ids duplicados, chaves inexistentes) antes de qualquer gravação. Um resumo é exibido e a importação precisa de confirmação.
+- **Exportar**: gera o arquivo `manucar-backup-DD-MM-AAAA_EPOCH.json`, em que `EPOCH` é o timestamp Unix em milissegundos e a data é local. O conteúdo tem `schemaVersion: 2` e inclui o baseline dos itens. O arquivo é gravado no diretório de cache do app e o menu de compartilhamento do Android é aberto, para o usuário salvar onde quiser (Downloads, Google Drive etc.). Se o aparelho não puder compartilhar, o caminho do arquivo é mostrado.
+- **Importar**: o usuário escolhe um arquivo `.json` pelo seletor do sistema (`File.pickFileAsync`). Também aceita backups `schemaVersion: 1`, reconstruindo o baseline a partir da primeira leitura de cada veículo.
+- O conteúdo é validado com zod e pela integridade referencial (ids duplicados, chaves inexistentes) antes de qualquer gravação. Um resumo é exibido e a importação precisa de confirmação.
 - A importação substitui todos os dados atuais numa única transação. Se algo falhar, nada é alterado.
 
-Limitação: não há seletor de arquivo. A importação depende de colar o conteúdo.
+Dependências: `expo-file-system` (leitura e escrita) e `expo-sharing` (menu de compartilhamento). O `expo-file-system` declara permissões de armazenamento e internet no manifesto, mas os builds EAS as removem via `blockedPermissions`.
 
 ---
 
@@ -394,16 +427,16 @@ Estrutura:
 - Repositórios e migrations são testados com SQLite em memória (`src/data/db/testing/test-database.ts`, via `node:sqlite`).
 - Cobertura excluída para `src/app` (rotas).
 
-Cobertura atual: domínio (6 arquivos), utils (4), forms (1), repositórios e backup (5), migrations (1) e o componente `WelcomeScreen` (não usado na navegação).
+Cobertura atual: domínio (7 arquivos), utils (7), forms (1), repositórios e backup (6), migrations (1), notificações (3) e o componente `WelcomeScreen` (não usado na navegação).
 
-Não há testes para `src/notifications`, para as telas de `src/app` nem para os componentes de `src/components/ui`.
+Não há testes para as telas de `src/app` nem para os componentes de `src/components/ui`.
 
 ---
 
 ## Permissões
 
-| Permissão | Motivo |
-| --- | --- |
+| Permissão                           | Motivo                     |
+| ----------------------------------- | -------------------------- |
 | Notificações (`POST_NOTIFICATIONS`) | Exibir os lembretes locais |
 
 Não são solicitadas localização, contatos, câmera, microfone, fotos ou arquivos. Nos builds EAS, a permissão de internet e outras são removidas via `app.config.js`.
@@ -418,40 +451,3 @@ Não são solicitadas localização, contatos, câmera, microfone, fotos ou arqu
 - **Sem requisições de rede**. O app é 100% offline.
 - **Dependências**: não adicionar nada fora da stack sem aprovação (ver `AGENTS.md`).
 - **Ao final de cada fase**: rodar `tsc --noEmit`, `eslint` e `jest`, e corrigir tudo.
-
----
-
-## Roadmap e status
-
-Detalhes por fase em `PLAN.md`.
-
-| Fase | Descrição | Status |
-| --- | --- | --- |
-| 0 | Setup do projeto | Concluída |
-| 1 | Dados (schema, migrations, repositórios) | Concluída |
-| 2 | Domínio (regras puras) | Concluída, com pendência (ver abaixo) |
-| 3 | Telas | Quase completa |
-| 4 | Notificações | Implementada, não validada em aparelho |
-| 5 | Acabamento (backup, tema escuro, ícone, splash) | Implementada |
-| 6 | Build e publicação | Parcial: perfis configurados, build de produção não gerado |
-
----
-
-## Limitações conhecidas
-
-1. **Item nunca feito**: enquanto não há registro em `maintenance_logs`, o vencimento é calculado a partir do odômetro atual e de `odometerUpdatedAt`. Assim, cada nova leitura empurra o vencimento. Pode ser intencional, mas precisa ser confirmado.
-2. **Leitura de odômetro retroativa**: o formulário não compara a data com as leituras anteriores. Uma leitura com km maior e data anterior à última pode fazer `calcAvgKmPerDay` lançar erro, sem tratamento na Home (`src/app/index.tsx`) e no detalhe do item.
-3. **Toque na notificação não navega**: o handler só define a exibição. Não há listener de resposta, então `itemId` e `vehicleId` não levam a nenhuma tela.
-4. **Reagendamento parcial**: criar ou editar veículo não chama `refreshScheduledNotifications()`. O reagendamento só ocorre ao voltar à Home.
-5. **Erros silenciados**: `buildNotificationPlan` ignora com `continue` itens que falham, sem registro. A constante `REMINDER_HOUR` em `scheduler.ts` duplica `WEEKLY_ODOMETER_HOUR` do domínio.
-6. **Sem telas para**: arquivar ou excluir item, excluir veículo, editar ou excluir registro do histórico, e listar o histórico de odômetro. Os repositórios já têm os métodos correspondentes.
-7. **Validação em aparelho pendente**: notificações agendadas e vibração não foram testadas no celular, e o canal usa `vibrationPattern` enquanto `VIBRATE` e `WAKE_LOCK` estão bloqueadas nos builds EAS.
-8. **Dependências fora da stack do `AGENTS.md`**: `expo-dev-client`, `react-native-web`, `babel-plugin-inline-import`, `test-renderer`, entre outras. Zustand e date-fns, previstos no `AGENTS.md`, não estão instalados.
-
----
-
-## Documentação adicional
-
-- `PLAN.md`: plano de desenvolvimento por fases.
-- `AGENTS.md`: regras e convenções do projeto.
-- `docs/politica-de-privacidade.md`: política de privacidade para a Play Store.

@@ -3,6 +3,11 @@ import { calcStatus } from './calc-status';
 import { parseIsoDate } from './date-utils';
 import { estimateDueDate } from './estimate-due-date';
 import type { MaintenanceItemSnapshot, MaintenanceStatus, VehicleSnapshot } from './types';
+import {
+  DEFAULT_WEEKLY_REMINDER,
+  normalizeWeeklyReminderSchedule,
+  type WeeklyReminderSchedule,
+} from './weekly-reminder';
 
 export interface NotificationMaintenanceItem extends MaintenanceItemSnapshot {
   id: number;
@@ -45,12 +50,10 @@ export type NotificationPlanEntry =
 export interface NotificationPlanOptions {
   avgKmPerDay?: number;
   includeWeeklyReminder?: boolean;
+  weeklyReminder?: WeeklyReminderSchedule;
 }
 
 export const WEEKLY_ODOMETER_NOTIFICATION_KEY = 'weekly-odometer';
-export const WEEKLY_ODOMETER_WEEKDAY = 2;
-export const WEEKLY_ODOMETER_HOUR = 9;
-export const WEEKLY_ODOMETER_MINUTE = 0;
 
 function toDateKey(date: Date): string {
   const year = String(date.getUTCFullYear()).padStart(4, '0');
@@ -115,15 +118,19 @@ function buildMaintenanceEntry(
   };
 }
 
-export function createWeeklyOdometerNotification(): WeeklyOdometerNotificationPlanEntry {
+export function createWeeklyOdometerNotification(
+  schedule: WeeklyReminderSchedule = DEFAULT_WEEKLY_REMINDER,
+): WeeklyOdometerNotificationPlanEntry {
+  const normalized = normalizeWeeklyReminderSchedule(schedule);
+
   return {
     type: 'weekly-odometer',
     key: WEEKLY_ODOMETER_NOTIFICATION_KEY,
     title: 'Atualize a quilometragem do carro',
     body: 'Abra o ManuCar e informe o odômetro atual para manter os lembretes de manutenção em dia.',
-    weekday: WEEKLY_ODOMETER_WEEKDAY,
-    hour: WEEKLY_ODOMETER_HOUR,
-    minute: WEEKLY_ODOMETER_MINUTE,
+    weekday: normalized.weekday,
+    hour: normalized.hour,
+    minute: normalized.minute,
   };
 }
 
@@ -155,7 +162,7 @@ export function buildNotificationPlan(
   }
 
   if (options.includeWeeklyReminder ?? true) {
-    entries.push(createWeeklyOdometerNotification());
+    entries.push(createWeeklyOdometerNotification(options.weeklyReminder));
   }
 
   return entries;

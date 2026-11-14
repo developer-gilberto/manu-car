@@ -21,6 +21,15 @@ describe('migrations', () => {
     );
   });
 
+  it('adiciona as colunas de baseline imutável', async () => {
+    const db = await createTestDatabase();
+    const columns = db.all<{ name: string }>(sql`PRAGMA table_info('maintenance_items')`);
+
+    expect(columns.map((column) => column.name)).toEqual(
+      expect.arrayContaining(['baseline_km', 'baseline_at']),
+    );
+  });
+
   it('pode ser executada novamente sem duplicar dados', async () => {
     const db = await createTestDatabase();
 

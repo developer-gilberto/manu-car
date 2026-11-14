@@ -17,6 +17,8 @@ function makeItem(overrides: Partial<MaintenanceItemSnapshot> = {}): Maintenance
     intervalMonths: null,
     lastDoneKm: 45_000,
     lastDoneAt: null,
+    baselineKm: 45_000,
+    baselineAt: null,
     ...overrides,
   };
 }
@@ -111,14 +113,20 @@ describe('estimateDueDate', () => {
     ).toBe('2026-02-01T23:45:30.123Z');
   });
 
-  it('usa o baseline atual quando o item nunca foi feito', () => {
+  it('usa o baseline imutável quando o item nunca foi feito', () => {
     expect(
       estimateDueDate(
         makeItem({ lastDoneKm: null, lastDoneAt: null }),
         { ...vehicle, odometerUpdatedAt: '2026-01-15T12:00:00.000Z' },
         100,
       ),
-    ).toBe('2026-04-25T12:00:00.000Z');
+    ).toBe('2026-03-06T12:00:00.000Z');
+  });
+
+  it('calcula a previsão a partir do baseline, não do odômetro atual', () => {
+    expect(estimateDueDate(makeItem({ lastDoneKm: null, lastDoneAt: null }), vehicle, 100)).toBe(
+      '2026-03-22T12:00:00.000Z',
+    );
   });
 
   it('rejeita odômetro que diminuiu', () => {

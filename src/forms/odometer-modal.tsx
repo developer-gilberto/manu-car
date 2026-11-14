@@ -8,10 +8,12 @@ import { FormError } from '@/components/ui/form-error';
 import { ModalSheet } from '@/components/ui/modal-sheet';
 import { TextField } from '@/components/ui/text-field';
 import type { Vehicle } from '@/data/db/schema';
+import type { OdometerReadingSnapshot } from '@/domain';
 import { createOdometerFormSchema, type OdometerFormValues } from '@/forms/schemas';
 import { type Palette, useThemedStyles } from '@/theme';
 import { formatDate, formatKm, parseDateInput, todayDateInput } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
+import { kmToInput, maskDateInput, maskKmInput, unmaskDigits } from '@/utils/input-masks';
 import { parseNonNegativeInteger } from '@/utils/numbers';
 
 export interface OdometerFormOutput {
@@ -21,14 +23,24 @@ export interface OdometerFormOutput {
 
 interface OdometerModalProps {
   vehicle: Vehicle;
+  readings: readonly OdometerReadingSnapshot[];
   visible: boolean;
   onClose: () => void;
   onSubmit: (output: OdometerFormOutput) => Promise<void>;
 }
 
-export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerModalProps) {
+export function OdometerModal({
+  vehicle,
+  readings,
+  visible,
+  onClose,
+  onSubmit,
+}: OdometerModalProps) {
   const styles = useThemedStyles(createStyles);
-  const schema = useMemo(() => createOdometerFormSchema(vehicle.odometerKm), [vehicle.odometerKm]);
+  const schema = useMemo(
+    () => createOdometerFormSchema(vehicle.odometerKm, readings),
+    [readings, vehicle.odometerKm],
+  );
   const {
     control,
     handleSubmit,
@@ -37,7 +49,7 @@ export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerM
     formState: { errors, isSubmitting },
   } = useForm<OdometerFormValues>({
     defaultValues: {
-      km: String(vehicle.odometerKm),
+      km: kmToInput(vehicle.odometerKm),
       date: todayDateInput(),
     },
     resolver: zodResolver(schema),
@@ -46,14 +58,14 @@ export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerM
   useEffect(() => {
     if (visible) {
       reset({
-        km: String(vehicle.odometerKm),
+        km: kmToInput(vehicle.odometerKm),
         date: todayDateInput(),
       });
     }
   }, [reset, vehicle.odometerKm, visible]);
 
   const submit = handleSubmit(async (values) => {
-    const km = parseNonNegativeInteger(values.km);
+    const km = parseNonNegativeInteger(unmaskDigits(values.km));
     const readAt = parseDateInput(values.date);
 
     if (km === null || !readAt) {
@@ -83,6 +95,7 @@ export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerM
             error={errors.km?.message}
             keyboardType="number-pad"
             label="Quilometragem"
+            mask={maskKmInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="Ex.: 52000"
@@ -97,8 +110,10 @@ export function OdometerModal({ vehicle, visible, onClose, onSubmit }: OdometerM
           <TextField
             autoCorrect={false}
             error={errors.date?.message}
-            hint="Formato DD/MM/AAAA."
+            hint="Formato DD/MM/AAAA. Para uma leitura antiga, o km deve ser compatível com o histórico."
+            keyboardType="number-pad"
             label="Data da leitura"
+            mask={maskDateInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="08/11/2026"

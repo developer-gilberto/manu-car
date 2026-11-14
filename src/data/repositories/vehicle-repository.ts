@@ -46,6 +46,8 @@ export class VehicleRepository {
             name: item.name,
             intervalKm: item.intervalKm,
             intervalMonths: item.intervalMonths,
+            baselineKm: vehicle.odometerKm,
+            baselineAt: vehicle.odometerUpdatedAt,
           })),
         )
         .run();

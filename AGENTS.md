@@ -14,6 +14,7 @@ e pare ao final de cada uma.
 - Zustand (estado de UI): dados vêm do banco
 - date-fns (datas, locale pt-BR)
 - zod (validação de formulários e import/export)
+- expo-file-system + expo-sharing (exportar e importar arquivos de backup)
 - react-hook-form + @hookform/resolvers
 - Jest + @testing-library/react-native
 - ESLint + Prettier
@@ -27,6 +28,7 @@ e pare ao final de cada uma.
 - Datas armazenadas em ISO 8601 (UTC); exibir em horário local.
 - Dinheiro em centavos (inteiro), nunca float.
 - Ao final de cada fase: rodar `tsc --noEmit`, `eslint`, `jest` e corrigir tudo.
+- Sempre que o código for modificado (funcionalidade, regra, tela, dependência, schema, comando ou configuração), atualizar na mesma tarefa a documentação afetada: `README.md`, `docs/politica-de-privacidade.md` (se mudar dados, permissões ou compartilhamento), `PLAN.md` e este `AGENTS.md` (se mudar stack ou regras). Nunca deixar a documentação desatualizada: antes de encerrar a tarefa, conferir se algum trecho da documentação contradiz o código.
 - Um commit por fase, mensagem em formato Conventional Commits.
 - Não fazer requisições de rede. O app é 100% offline.
 - Intervalos de manutenção padrão são genéricos; a UI deve avisar que o manual do carro prevalece.
@@ -39,6 +41,7 @@ src/
   data/
     db/           (schema, migrations)
     repositories/
+  forms/          (schemas zod e formulários react-hook-form)
   notifications/
   store/
   utils/

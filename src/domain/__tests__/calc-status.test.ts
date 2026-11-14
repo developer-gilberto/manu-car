@@ -12,6 +12,8 @@ function makeItem(overrides: Partial<MaintenanceItemSnapshot> = {}): Maintenance
     intervalMonths: 12,
     lastDoneKm: 45_000,
     lastDoneAt: '2025-12-15T12:00:00.000Z',
+    baselineKm: 45_000,
+    baselineAt: '2025-12-15T12:00:00.000Z',
     ...overrides,
   };
 }
@@ -123,7 +125,7 @@ describe('calcStatus', () => {
     );
   });
 
-  it('mantém ok quando o item nunca foi feito e o baseline é atual', () => {
+  it('mantém ok quando o item nunca foi feito e está dentro do intervalo do baseline', () => {
     expect(
       calcStatus(
         makeItem({ intervalKm: 10_000, intervalMonths: 12, lastDoneKm: null, lastDoneAt: null }),
@@ -133,11 +135,37 @@ describe('calcStatus', () => {
     ).toBe('ok');
   });
 
-  it('fica vencido por tempo quando o item nunca foi feito e a data do veículo é antiga', () => {
+  it('vence por km conforme o odômetro avança sobre o baseline fixo', () => {
+    const item = makeItem({
+      intervalKm: 10_000,
+      intervalMonths: null,
+      lastDoneKm: null,
+      lastDoneAt: null,
+      baselineKm: 45_000,
+    });
+
+    expect(calcStatus(item, { ...vehicle, odometerKm: 52_000 }, '2026-01-15T12:00:00.000Z')).toBe(
+      'ok',
+    );
+    expect(calcStatus(item, { ...vehicle, odometerKm: 54_000 }, '2026-01-15T12:00:00.000Z')).toBe(
+      'atencao',
+    );
+    expect(calcStatus(item, { ...vehicle, odometerKm: 55_000 }, '2026-01-15T12:00:00.000Z')).toBe(
+      'vencido',
+    );
+  });
+
+  it('fica vencido por tempo quando o item nunca foi feito e o baseline é antigo', () => {
     expect(
       calcStatus(
-        makeItem({ intervalKm: 10_000, intervalMonths: 12, lastDoneKm: null, lastDoneAt: null }),
-        { ...vehicle, odometerUpdatedAt: '2024-01-15T12:00:00.000Z' },
+        makeItem({
+          intervalKm: 10_000,
+          intervalMonths: 12,
+          lastDoneKm: null,
+          lastDoneAt: null,
+          baselineAt: '2024-01-15T12:00:00.000Z',
+        }),
+        vehicle,
         '2026-01-15T12:00:00.000Z',
       ),
     ).toBe('vencido');

@@ -1,4 +1,4 @@
-import { calcNextDue, calcStatus, estimateDueDate } from '@/domain';
+import { calcNextDue, calcStatus, estimateDueDate, isNeverDone } from '@/domain';
 import type { MaintenanceItemSnapshot, MaintenanceStatus, VehicleSnapshot } from '@/domain';
 
 import { differenceInUtcCalendarDays, formatDate, formatKm } from './date';
@@ -13,6 +13,7 @@ export interface MaintenanceItemViewItem extends MaintenanceItemSnapshot {
 export interface MaintenanceItemView {
   item: MaintenanceItemViewItem;
   status: MaintenanceStatus;
+  neverDone: boolean;
   dueKm: number | null;
   dueAt: string | null;
   remainingKm: number | null;
@@ -43,6 +44,7 @@ export function buildMaintenanceItemView(
     return {
       item,
       status,
+      neverDone: isNeverDone(item),
       dueKm: due.dueKm,
       dueAt: due.dueAt,
       remainingKm,
@@ -54,6 +56,7 @@ export function buildMaintenanceItemView(
     return {
       item,
       status: 'atencao',
+      neverDone: isNeverDone(item),
       dueKm: null,
       dueAt: null,
       remainingKm: null,
@@ -70,6 +73,15 @@ export function getDueSummary(view: MaintenanceItemView): string[] {
   }
 
   const labels: string[] = [];
+
+  if (view.neverDone) {
+    const reference = view.item.baselineAt ? formatDate(view.item.baselineAt) : null;
+    labels.push(
+      reference
+        ? `Nunca feito — contando desde ${reference}`
+        : 'Nunca feito — sem registro de execução',
+    );
+  }
 
   if (view.remainingKm !== null) {
     if (view.remainingKm > 0) {
@@ -125,6 +137,10 @@ export function sortMaintenanceViews(views: readonly MaintenanceItemView[]): Mai
 
     if (statusDifference !== 0) {
       return statusDifference;
+    }
+
+    if (first.neverDone !== second.neverDone) {
+      return first.neverDone ? -1 : 1;
     }
 
     const firstDate = first.dueAt ?? first.estimatedDueAt;

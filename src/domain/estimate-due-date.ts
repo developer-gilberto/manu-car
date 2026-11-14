@@ -1,3 +1,4 @@
+import { resolveBaselineKm } from './baseline';
 import { addDaysUtc, parseIsoDate } from './date-utils';
 import { OdometerDecreasedError } from './errors';
 import type { MaintenanceItemSnapshot, VehicleSnapshot } from './types';
@@ -18,17 +19,23 @@ export function estimateDueDate(
 
   if (item.lastDoneKm !== null) {
     assertValidOdometerKm(item.lastDoneKm, 'item.lastDoneKm');
+  }
 
-    if (vehicle.odometerKm < item.lastDoneKm) {
-      throw new OdometerDecreasedError(item.lastDoneKm, vehicle.odometerKm);
-    }
+  if (item.baselineKm !== null) {
+    assertValidOdometerKm(item.baselineKm, 'item.baselineKm');
+  }
+
+  const referenceKm = resolveBaselineKm(item, vehicle);
+
+  if (vehicle.odometerKm < referenceKm) {
+    throw new OdometerDecreasedError(referenceKm, vehicle.odometerKm);
   }
 
   if (!Number.isFinite(avgKmPerDay) || avgKmPerDay <= 0) {
     return null;
   }
 
-  const dueKm = (item.lastDoneKm ?? vehicle.odometerKm) + item.intervalKm;
+  const dueKm = referenceKm + item.intervalKm;
   const remainingKm = dueKm - vehicle.odometerKm;
   const days =
     remainingKm >= 0 ? Math.ceil(remainingKm / avgKmPerDay) : Math.floor(remainingKm / avgKmPerDay);

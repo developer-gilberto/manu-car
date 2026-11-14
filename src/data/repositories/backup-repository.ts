@@ -2,6 +2,48 @@ import { maintenanceItems, maintenanceLogs, odometerReadings, vehicles } from '@
 import type { AppDatabase } from '@/data/db/types';
 import type { BackupData } from '@/domain/backup';
 
+function earliestReadingsByVehicle(
+  readings: BackupData['odometerReadings'],
+): Map<number, { km: number; readAt: string; id: number }> {
+  const earliest = new Map<number, { km: number; readAt: string; id: number }>();
+
+  for (const reading of readings) {
+    const current = earliest.get(reading.vehicleId);
+
+    if (
+      !current ||
+      reading.readAt < current.readAt ||
+      (reading.readAt === current.readAt && reading.id < current.id)
+    ) {
+      earliest.set(reading.vehicleId, reading);
+    }
+  }
+
+  return earliest;
+}
+
+/**
+ * Garante que itens importados sempre tenham baseline. Backups antigos ou
+ * editados à mão podem trazer `null`; nesse caso usamos a mesma regra de
+ * reconstrução: última execução > primeira leitura > estado do veículo.
+ */
+function withResolvedBaselines(data: BackupData): BackupData['maintenanceItems'] {
+  const vehiclesById = new Map(data.vehicles.map((vehicle) => [vehicle.id, vehicle]));
+  const earliestReadings = earliestReadingsByVehicle(data.odometerReadings);
+
+  return data.maintenanceItems.map((item) => {
+    const vehicle = vehiclesById.get(item.vehicleId);
+    const reading = earliestReadings.get(item.vehicleId);
+
+    return {
+      ...item,
+      baselineKm: item.baselineKm ?? item.lastDoneKm ?? reading?.km ?? vehicle?.odometerKm ?? null,
+      baselineAt:
+        item.baselineAt ?? item.lastDoneAt ?? reading?.readAt ?? vehicle?.odometerUpdatedAt ?? null,
+    };
+  });
+}
+
 /**
  * Lê e substitui todo o conteúdo do banco para backup.
  * Telas não usam este repositório diretamente: passam pela camada de backup.
@@ -36,7 +78,7 @@ export class BackupRepository {
       }
 
       if (data.maintenanceItems.length > 0) {
-        tx.insert(maintenanceItems).values(data.maintenanceItems).run();
+        tx.insert(maintenanceItems).values(withResolvedBaselines(data)).run();
       }
 
       if (data.odometerReadings.length > 0) {

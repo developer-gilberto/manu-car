@@ -1,5 +1,6 @@
 import { createTestDatabase } from '@/data/db/testing/test-database';
 import type { AppDatabase } from '@/data/db/types';
+import { LogRepository } from '@/data/repositories/log-repository';
 import { MaintenanceItemRepository } from '@/data/repositories/maintenance-item-repository';
 import { VehicleRepository } from '@/data/repositories/vehicle-repository';
 
@@ -17,6 +18,7 @@ describe('MaintenanceItemRepository', () => {
   });
 
   it('cria um item com valores padrão', () => {
+    const vehicle = new VehicleRepository(db).getById(vehicleId);
     const item = repository.create({ vehicleId, name: 'Pneus' });
 
     expect(item.id).toBeGreaterThan(0);
@@ -26,6 +28,8 @@ describe('MaintenanceItemRepository', () => {
     expect(item.intervalMonths).toBeNull();
     expect(item.lastDoneKm).toBeNull();
     expect(item.lastDoneAt).toBeNull();
+    expect(item.baselineKm).toBe(vehicle?.odometerKm);
+    expect(item.baselineAt).toBe(vehicle?.odometerUpdatedAt);
     expect(item.notifyEnabled).toBe(true);
     expect(item.archived).toBe(false);
   });
@@ -94,6 +98,26 @@ describe('MaintenanceItemRepository', () => {
       lastDoneKm: null,
       lastDoneAt: null,
     });
+    // O baseline é imutável: limpar a última execução não o recalcula.
+    expect(updated).toMatchObject({
+      baselineKm: 45000,
+      baselineAt: LAST_DONE_AT,
+    });
+  });
+
+  it('não altera o baseline em atualizações posteriores', () => {
+    const item = repository.create({ vehicleId, name: 'Pneus' });
+    const updated = repository.update(item.id, {
+      lastDoneKm: 50000,
+      lastDoneAt: LAST_DONE_AT,
+    });
+
+    expect(updated).toMatchObject({
+      lastDoneKm: 50000,
+      lastDoneAt: LAST_DONE_AT,
+      baselineKm: item.baselineKm,
+      baselineAt: item.baselineAt,
+    });
   });
 
   it('retorna o item atual quando a atualização está vazia', () => {
@@ -109,5 +133,31 @@ describe('MaintenanceItemRepository', () => {
     expect(repository.delete(item.id)).toBe(true);
     expect(repository.getById(item.id)).toBeUndefined();
     expect(repository.delete(item.id)).toBe(false);
+  });
+
+  it('remove o histórico do item junto com ele e preserva os outros itens', () => {
+    const logs = new LogRepository(db);
+    const removed = repository.create({ vehicleId, name: 'Pneus' });
+    const kept = repository.create({ vehicleId, name: 'Óleo' });
+
+    logs.create({
+      itemId: removed.id,
+      doneAt: LAST_DONE_AT,
+      km: 50_000,
+      costCents: 1_000,
+      notes: null,
+    });
+    logs.create({
+      itemId: kept.id,
+      doneAt: LAST_DONE_AT,
+      km: 50_000,
+      costCents: 2_000,
+      notes: null,
+    });
+
+    expect(repository.delete(removed.id)).toBe(true);
+    expect(logs.listByItem(removed.id)).toEqual([]);
+    expect(logs.listByItem(kept.id)).toHaveLength(1);
+    expect(repository.getById(kept.id)).toBeDefined();
   });
 });

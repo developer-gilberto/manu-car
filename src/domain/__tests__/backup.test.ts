@@ -29,6 +29,8 @@ const data: BackupData = {
       intervalMonths: 6,
       lastDoneKm: 45_000,
       lastDoneAt: null,
+      baselineKm: 45_000,
+      baselineAt: '2026-02-20T10:00:00.000Z',
       notifyEnabled: true,
       archived: false,
     },
@@ -89,15 +91,33 @@ describe('backup', () => {
 
   it('rejeita versão desconhecida sem tentar interpretar o conteúdo', () => {
     const future = JSON.parse(validText());
-    future.schemaVersion = 2;
+    future.schemaVersion = 3;
 
     const result = parseBackup(JSON.stringify(future));
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe('UNSUPPORTED_VERSION');
-      expect(result.error.message).toContain('2');
+      expect(result.error.message).toContain('3');
       expect(result.error.message).toContain(String(BACKUP_SCHEMA_VERSION));
+    }
+  });
+
+  it('importa backup v1 reconstruindo o baseline', () => {
+    const legacy = JSON.parse(validText());
+    legacy.schemaVersion = 1;
+    delete legacy.maintenanceItems[0].baselineKm;
+    delete legacy.maintenanceItems[0].baselineAt;
+
+    const result = parseBackup(JSON.stringify(legacy));
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.backup.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
+      expect(result.backup.maintenanceItems[0]).toMatchObject({
+        baselineKm: 45_000,
+        baselineAt: '2026-02-20T10:00:00.000Z',
+      });
     }
   });
 

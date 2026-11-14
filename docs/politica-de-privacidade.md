@@ -1,6 +1,6 @@
 # Política de Privacidade do ManuCar
 
-**Última atualização:** 12/11/2026
+**Última atualização:** 14/11/2026
 
 O ManuCar ("aplicativo") é um aplicativo para lembrar manutenções do veículo por quilometragem e/ou tempo. Esta política explica quais dados são tratados e como.
 
@@ -20,8 +20,9 @@ O ManuCar ("aplicativo") é um aplicativo para lembrar manutenções do veículo
 
 O aplicativo armazena localmente apenas as informações que você digita:
 
-- Dados dos veículos cadastrados (ex.: nome, modelo, ano, quilometragem atual).
+- Dados dos veículos cadastrados (nome, placa opcional, quilometragem atual e registros de leitura do odômetro).
 - Tipos de manutenção, intervalos configurados e histórico de manutenções realizadas (datas, quilometragem e, se informados, valores em reais).
+- Preferências de notificação: se os lembretes estão ativados e o dia e horário do lembrete semanal.
 
 Você não é obrigado a informar nenhum dado além do necessário para o funcionamento do app.
 
@@ -36,11 +37,11 @@ Os dados são usados exclusivamente para:
 
 ## 5. Notificações
 
-O aplicativo usa **notificações locais** (geradas pelo próprio aparelho, sem servidor externo) para avisar sobre manutenções próximas ou vencidas. Você pode desativá-las a qualquer momento nas configurações do aplicativo ou do sistema Android.
+O aplicativo usa **notificações locais** (geradas pelo próprio aparelho, sem servidor externo) para avisar sobre manutenções próximas ou vencidas e para lembrar de atualizar a quilometragem. Os lembretes vêm ativados por padrão. Na primeira abertura, o aplicativo pede sua permissão para enviar notificações. Você pode negar, desativar os lembretes a qualquer momento nas configurações do aplicativo ou revogar a permissão nas configurações do sistema Android.
 
 ## 6. Exportação e importação de dados
 
-Quando você exporta seus dados, o arquivo é gerado no seu aparelho e compartilhado somente por você, pelos meios que escolher. Ao importar um arquivo, o conteúdo é validado e gravado apenas no banco local. Não há envio automático de nenhum arquivo.
+Quando você exporta seus dados, o aplicativo gera um arquivo JSON no seu aparelho e abre o menu de compartilhamento do sistema, para você salvá-lo onde quiser. O arquivo fica temporariamente na área de cache do aplicativo até que o sistema a limpe. Ao importar, você escolhe o arquivo pelo seletor do sistema; o aplicativo lê somente esse arquivo, valida o conteúdo e grava apenas no banco local. Não há envio automático de nenhum arquivo.
 
 ## 7. Compartilhamento com terceiros
 
@@ -48,7 +49,7 @@ Não compartilhamos dados com terceiros, pois não os enviamos para nenhum lugar
 
 ## 8. Armazenamento e segurança
 
-Os dados ficam no armazenamento interno do aplicativo no seu aparelho. Eles são removidos se você desinstalar o aplicativo ou limpar seus dados nas configurações do Android. Recomendamos manter um backup exportado caso troque de aparelho.
+Os dados ficam no armazenamento interno do aplicativo no seu aparelho. Eles são removidos se você desinstalar o aplicativo ou limpar seus dados nas configurações do Android. Os arquivos de backup exportados não são apagados pelo aplicativo: se você os salvou, eles permanecem onde você os guardou. Recomendamos manter um backup exportado caso troque de aparelho.
 
 ## 9. Permissões do Android
 

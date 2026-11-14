@@ -18,6 +18,8 @@ function makeItem(overrides: Partial<MaintenanceItemSnapshot> = {}): Maintenance
     intervalMonths: 12,
     lastDoneKm: 45_000,
     lastDoneAt: '2025-12-15T12:00:00.000Z',
+    baselineKm: 45_000,
+    baselineAt: '2025-12-15T12:00:00.000Z',
     ...overrides,
   };
 }
@@ -51,26 +53,48 @@ describe('calcNextDue', () => {
     });
   });
 
-  it('usa o odômetro e a data atuais do veículo quando o item nunca foi feito', () => {
+  it('usa o baseline imutável quando o item nunca foi feito', () => {
     expect(calcNextDue(makeItem({ lastDoneKm: null, lastDoneAt: null }), vehicle)).toEqual({
-      dueKm: 60_000,
-      dueAt: '2027-01-15T12:00:00.000Z',
+      dueKm: 55_000,
+      dueAt: '2026-12-15T12:00:00.000Z',
     });
   });
 
-  it('usa a data do veículo quando lastDoneAt é nulo', () => {
+  it('não desliza o vencimento quando o odômetro/data do veículo mudam', () => {
+    const item = makeItem({ lastDoneKm: null, lastDoneAt: null });
+    const laterVehicle = {
+      odometerKm: 58_000,
+      odometerUpdatedAt: '2026-06-01T12:00:00.000Z',
+    };
+
+    expect(calcNextDue(item, laterVehicle)).toEqual(calcNextDue(item, vehicle));
+  });
+
+  it('usa o baseline de data quando lastDoneAt é nulo', () => {
     expect(calcNextDue(makeItem({ lastDoneKm: 45_000, lastDoneAt: null }), vehicle)).toEqual({
       dueKm: 55_000,
-      dueAt: '2027-01-15T12:00:00.000Z',
+      dueAt: '2026-12-15T12:00:00.000Z',
     });
   });
 
-  it('usa o odômetro atual quando lastDoneKm é nulo', () => {
+  it('usa o baseline de km quando lastDoneKm é nulo', () => {
     expect(
       calcNextDue(makeItem({ lastDoneKm: null, lastDoneAt: '2025-12-15T12:00:00.000Z' }), vehicle),
     ).toEqual({
-      dueKm: 60_000,
+      dueKm: 55_000,
       dueAt: '2026-12-15T12:00:00.000Z',
+    });
+  });
+
+  it('cai para o veículo quando o item nunca foi feito e não tem baseline', () => {
+    expect(
+      calcNextDue(
+        makeItem({ lastDoneKm: null, lastDoneAt: null, baselineKm: null, baselineAt: null }),
+        vehicle,
+      ),
+    ).toEqual({
+      dueKm: 60_000,
+      dueAt: '2027-01-15T12:00:00.000Z',
     });
   });
 
@@ -147,7 +171,7 @@ describe('calcNextDue', () => {
 
   it('rejeita data inválida do veículo quando precisa dela', () => {
     expect(() =>
-      calcNextDue(makeItem({ lastDoneAt: null }), {
+      calcNextDue(makeItem({ lastDoneAt: null, baselineAt: null }), {
         ...vehicle,
         odometerUpdatedAt: 'data-invalida',
       }),
@@ -167,6 +191,10 @@ describe('calcNextDue', () => {
     expect(() => calcNextDue(makeItem({ lastDoneKm: -1 }), vehicle)).toThrow(InvalidOdometerError);
   });
 
+  it('rejeita baselineKm negativo', () => {
+    expect(() => calcNextDue(makeItem({ baselineKm: -1 }), vehicle)).toThrow(InvalidOdometerError);
+  });
+
   it('rejeita intervalos zero ou negativos', () => {
     expect(() => calcNextDue(makeItem({ intervalKm: 0 }), vehicle)).toThrow(InvalidIntervalError);
     expect(() => calcNextDue(makeItem({ intervalMonths: -1 }), vehicle)).toThrow(
@@ -174,7 +202,11 @@ describe('calcNextDue', () => {
     );
   });
 
-  it('rejeita odômetro que diminuiu com erro tipado', () => {
+  it('rejeita odômetro que diminuiu em relação ao baseline', () => {
+    expect(() => calcNextDue(makeItem({ lastDoneKm: null, baselineKm: 60_000 }), vehicle)).toThrow(
+      OdometerDecreasedError,
+    );
+
     expect(() => calcNextDue(makeItem({ lastDoneKm: 60_000 }), vehicle)).toThrow(
       OdometerDecreasedError,
     );

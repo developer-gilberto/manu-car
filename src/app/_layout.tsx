@@ -3,6 +3,8 @@ import { StatusBar } from 'expo-status-bar';
 
 import { DatabaseGate } from '@/data/db/database-gate';
 import '@/notifications/notification-handler';
+import { InitialNotificationPermissionPrompt } from '@/notifications/initial-permission-prompt';
+import { NotificationResponseHandler } from '@/notifications/notification-response-handler';
 import { useThemeColors } from '@/theme';
 
 export default function RootLayout() {
@@ -10,6 +12,8 @@ export default function RootLayout() {
 
   return (
     <DatabaseGate>
+      <NotificationResponseHandler />
+      <InitialNotificationPermissionPrompt />
       <StatusBar style="auto" />
       <Stack
         screenOptions={{

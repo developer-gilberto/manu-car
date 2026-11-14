@@ -1,12 +1,14 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { ActionLink } from '@/components/ui/action-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FormError } from '@/components/ui/form-error';
 import { LoadingState } from '@/components/ui/loading-state';
+import { NeverDoneBadge } from '@/components/ui/never-done-badge';
 import { Screen } from '@/components/ui/screen';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { WarningBanner } from '@/components/ui/warning-banner';
@@ -68,6 +70,8 @@ export default function ItemDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markDoneVisible, setMarkDoneVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -111,7 +115,17 @@ export default function ItemDetailScreen() {
     }, [load]),
   );
 
-  const avgKmPerDay = useMemo(() => (data ? calcAvgKmPerDay(data.readings, now) : 0), [data, now]);
+  const avgKmPerDay = useMemo(() => {
+    if (!data) {
+      return 0;
+    }
+
+    try {
+      return calcAvgKmPerDay(data.readings, now);
+    } catch {
+      return 0;
+    }
+  }, [data, now]);
   const view = useMemo(
     () => (data ? buildMaintenanceItemView(data.item, data.vehicle, avgKmPerDay, now) : null),
     [avgKmPerDay, data, now],
@@ -137,6 +151,51 @@ export default function ItemDetailScreen() {
     void refreshScheduledNotifications();
   };
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
+  const runDelete = async (item: MaintenanceItem) => {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      // Os registros do histórico são apagados em cascata pelo banco.
+      const removed = repositories.maintenanceItems.delete(item.id);
+
+      if (!removed) {
+        throw new Error('Item não encontrado. Ele pode já ter sido excluído.');
+      }
+
+      // Refaz a fila sem este item; falhas aqui não impedem a exclusão.
+      await refreshScheduledNotifications();
+      goBack();
+    } catch (deleteFailure) {
+      setDeleteError(getErrorMessage(deleteFailure));
+      setDeleting(false);
+    }
+  };
+
+  const confirmDelete = (item: MaintenanceItem, logCount: number) => {
+    const historyText =
+      logCount === 0
+        ? 'O item será apagado.'
+        : `O item e seus ${logCount} registro${logCount === 1 ? '' : 's'} de histórico serão apagados.`;
+
+    Alert.alert(`Excluir "${item.name}"?`, `${historyText} Esta ação não pode ser desfeita.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => void runDelete(item),
+      },
+    ]);
+  };
+
   const dueLines = view ? getDueSummary(view) : [];
   const estimatedLabel = view ? getEstimatedLabel(view) : null;
 
@@ -151,6 +210,7 @@ export default function ItemDetailScreen() {
                     pathname: '/items/[id]/edit',
                     params: { id: String(data.item.id) },
                   }}
+                  icon="edit-2"
                   label="Editar"
                 />
               )
@@ -165,13 +225,7 @@ export default function ItemDetailScreen() {
         <EmptyState
           actionLabel="Voltar"
           description={error ?? 'Não foi possível carregar este item.'}
-          onAction={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/');
-            }
-          }}
+          onAction={goBack}
           title="Item indisponível"
         />
       ) : (
@@ -179,7 +233,10 @@ export default function ItemDetailScreen() {
           <Card style={styles.summaryCard}>
             <View style={styles.summaryHeader}>
               <Text style={styles.itemName}>{data.item.name}</Text>
-              <StatusBadge status={view.status} />
+              <View style={styles.badges}>
+                {view.neverDone ? <NeverDoneBadge /> : null}
+                <StatusBadge status={view.status} />
+              </View>
             </View>
             <View style={styles.dueList}>
               {dueLines.map((line) => (
@@ -239,6 +296,21 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
+          <View style={styles.dangerZone}>
+            <Text style={styles.sectionTitle}>Excluir item</Text>
+            <Text style={styles.dangerText}>
+              Remove este item de manutenção e todo o seu histórico. Para apenas parar os avisos,
+              desative o lembrete na edição do item.
+            </Text>
+            <FormError message={deleteError ?? undefined} />
+            <Button
+              disabled={deleting}
+              onPress={() => confirmDelete(data.item, data.logs.length)}
+              title="Excluir item"
+              variant="danger"
+            />
+          </View>
+
           <MarkDoneModal
             item={data.item}
             onClose={() => setMarkDoneVisible(false)}
@@ -269,6 +341,11 @@ const createStyles = (colors: Palette) =>
       fontSize: 22,
       fontWeight: '700',
       textTransform: 'capitalize',
+    },
+    badges: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.sm,
     },
     dueList: {
       gap: spacing.xs,
@@ -342,6 +419,15 @@ const createStyles = (colors: Palette) =>
     },
     logNotes: {
       color: colors.text,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    dangerZone: {
+      gap: spacing.md,
+      marginTop: spacing.lg,
+    },
+    dangerText: {
+      color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
     },

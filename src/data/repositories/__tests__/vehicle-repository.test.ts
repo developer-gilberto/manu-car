@@ -54,6 +54,8 @@ describe('VehicleRepository', () => {
     );
     expect(items.every((item) => item.notifyEnabled)).toBe(true);
     expect(items.every((item) => item.archived)).toBe(false);
+    expect(items.every((item) => item.baselineKm === 45000)).toBe(true);
+    expect(items.every((item) => item.baselineAt === ODOMETER_UPDATED_AT)).toBe(true);
   });
 
   it('faz o seed separadamente para cada veículo', () => {

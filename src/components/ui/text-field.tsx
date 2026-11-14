@@ -8,6 +8,8 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   error?: string;
   hint?: string;
   containerStyle?: StyleProp<ViewStyle>;
+  /** Formata o texto a cada alteração (ex.: data DD/MM/AAAA). */
+  mask?: (value: string) => string;
 }
 
 export function TextField({
@@ -16,6 +18,8 @@ export function TextField({
   hint,
   containerStyle,
   multiline,
+  mask,
+  onChangeText,
   ...inputProps
 }: TextFieldProps) {
   const styles = useThemedStyles(createStyles);
@@ -27,6 +31,7 @@ export function TextField({
         multiline={multiline}
         placeholderTextColor={colors.textMuted}
         style={[styles.input, multiline && styles.multiline, error ? styles.inputError : null]}
+        onChangeText={mask ? (text: string) => onChangeText?.(mask(text)) : onChangeText}
         textAlignVertical={multiline ? 'top' : 'center'}
         {...inputProps}
       />

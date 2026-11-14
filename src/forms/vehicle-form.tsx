@@ -9,6 +9,7 @@ import type { Vehicle } from '@/data/db/schema';
 import { vehicleFormSchema, type VehicleFormValues } from '@/forms/schemas';
 import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { getErrorMessage } from '@/utils/errors';
+import { maskPlateInput } from '@/utils/input-masks';
 
 export interface VehicleFormOutput {
   name: string;
@@ -31,7 +32,7 @@ export function VehicleForm({ vehicle, submitLabel, onSubmit }: VehicleFormProps
   } = useForm<VehicleFormValues>({
     defaultValues: {
       name: vehicle?.name ?? '',
-      plate: vehicle?.plate ?? '',
+      plate: maskPlateInput(vehicle?.plate ?? ''),
     },
     resolver: zodResolver(vehicleFormSchema),
   });
@@ -75,6 +76,7 @@ export function VehicleForm({ vehicle, submitLabel, onSubmit }: VehicleFormProps
             error={errors.plate?.message}
             hint="Opcional."
             label="Placa"
+            mask={maskPlateInput}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="ABC1D23"

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { IconLink } from '@/components/ui/icon-link';
 import { LoadingState } from '@/components/ui/loading-state';
+import { NeverDoneBadge } from '@/components/ui/never-done-badge';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -90,17 +91,19 @@ export default function HomeScreen() {
   );
 
   const selectedVehicle = vehicles.find((vehicle) => vehicle.id === selectedVehicleId) ?? null;
-  const avgKmPerDay = useMemo(
-    () =>
-      calcAvgKmPerDay(
+  const avgKmPerDay = useMemo(() => {
+    try {
+      return calcAvgKmPerDay(
         readings.map((reading) => ({
           km: reading.km,
           readAt: reading.readAt,
         })),
         now,
-      ),
-    [now, readings],
-  );
+      );
+    } catch {
+      return 0;
+    }
+  }, [now, readings]);
   const views = useMemo(() => {
     if (!selectedVehicle) {
       return [];
@@ -118,15 +121,20 @@ export default function HomeScreen() {
       return;
     }
 
-    repositories.odometer.create({
+    const reading = repositories.odometer.create({
       vehicleId: selectedVehicle.id,
       km,
       readAt,
     });
-    repositories.vehicles.update(selectedVehicle.id, {
-      odometerKm: km,
-      odometerUpdatedAt: readAt,
-    });
+    const latest = repositories.odometer.latestForVehicle(selectedVehicle.id);
+
+    if (latest?.id === reading.id) {
+      repositories.vehicles.update(selectedVehicle.id, {
+        odometerKm: km,
+        odometerUpdatedAt: readAt,
+      });
+    }
+
     load();
     void refreshScheduledNotifications();
   };
@@ -214,6 +222,7 @@ export default function HomeScreen() {
                   pathname: '/vehicles/[id]/edit',
                   params: { id: String(selectedVehicle.id) },
                 }}
+                icon="edit-2"
                 label="Editar"
               />
             </View>
@@ -238,7 +247,7 @@ export default function HomeScreen() {
                 label="Novo item"
               />
             }
-            subtitle={`${views.length} item${views.length === 1 ? '' : 's'} acompanhado${views.length === 1 ? '' : 's'}`}
+            subtitle={`${views.length} ${views.length === 1 ? 'item sendo acompanhado' : 'itens sendo acompanhados'}`}
             title="Manutenções"
           />
 
@@ -269,7 +278,10 @@ export default function HomeScreen() {
                     <Card style={styles.itemCard}>
                       <View style={styles.itemHeader}>
                         <Text style={styles.itemName}>{view.item.name}</Text>
-                        <StatusBadge status={view.status} />
+                        <View style={styles.badges}>
+                          {view.neverDone ? <NeverDoneBadge /> : null}
+                          <StatusBadge status={view.status} />
+                        </View>
                       </View>
                       <View style={styles.dueList}>
                         {dueLines.map((line) => (
@@ -294,6 +306,7 @@ export default function HomeScreen() {
         <OdometerModal
           onClose={() => setOdometerVisible(false)}
           onSubmit={handleOdometerSubmit}
+          readings={readings}
           vehicle={selectedVehicle}
           visible={odometerVisible}
         />
@@ -406,6 +419,11 @@ const createStyles = (colors: Palette) =>
       fontSize: 16,
       fontWeight: '700',
       textTransform: 'capitalize',
+    },
+    badges: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.sm,
     },
     dueList: {
       gap: spacing.xs,

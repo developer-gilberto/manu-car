@@ -25,6 +25,8 @@ function item(overrides: Partial<MaintenanceItemViewItem> = {}): MaintenanceItem
     intervalMonths: null,
     lastDoneKm: 9000,
     lastDoneAt: null,
+    baselineKm: 9000,
+    baselineAt: null,
     ...overrides,
   };
 }
@@ -89,6 +91,25 @@ describe('maintenance view utils', () => {
 
     expect(view.estimatedDueAt).not.toBeNull();
     expect(getEstimatedLabel(view)).toContain('Previsão por km:');
+  });
+
+  it('marca item nunca feito e conta a partir do baseline fixo', () => {
+    const neverDone = item({
+      lastDoneKm: null,
+      lastDoneAt: null,
+      baselineKm: 8000,
+      baselineAt: '2026-01-01T12:00:00.000Z',
+    });
+
+    const view = buildMaintenanceItemView(neverDone, vehicle, 20, NOW);
+
+    expect(view.neverDone).toBe(true);
+    expect(view.dueKm).toBe(9000);
+    expect(view.status).toBe('vencido');
+    expect(getDueSummary(view)[0]).toContain('Nunca feito');
+
+    const laterVehicle: VehicleSnapshot = { ...vehicle, odometerKm: 12000 };
+    expect(buildMaintenanceItemView(neverDone, laterVehicle, 20, NOW).dueKm).toBe(9000);
   });
 
   it('returns an error view when the odometer decreased', () => {

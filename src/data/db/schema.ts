@@ -33,6 +33,8 @@ export const maintenanceItems = sqliteTable(
     intervalMonths: integer('interval_months'),
     lastDoneKm: integer('last_done_km'),
     lastDoneAt: text('last_done_at'),
+    baselineKm: integer('baseline_km'),
+    baselineAt: text('baseline_at'),
     notifyEnabled: integer('notify_enabled', { mode: 'boolean' }).notNull().default(true),
     archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   },

@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { SwitchField } from '@/components/ui/switch-field';
 import { getRepositories } from '@/data/repositories';
+import { DEFAULT_WEEKLY_REMINDER, type WeeklyReminderSchedule } from '@/domain';
+import { WeeklyReminderModal } from '@/forms/weekly-reminder-modal';
 import {
   cancelScheduledNotifications,
   refreshScheduledNotifications,
@@ -21,12 +23,16 @@ import {
 } from '@/notifications/permissions';
 import { type Palette, radius, spacing, useThemedStyles } from '@/theme';
 import { getErrorMessage } from '@/utils/errors';
+import { formatWeeklyReminder } from '@/utils/weekly-reminder';
 
 export default function SettingsScreen() {
   const styles = useThemedStyles(createStyles);
   const repositories = useMemo(() => getRepositories(), []);
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
+  const [weeklyReminder, setWeeklyReminder] =
+    useState<WeeklyReminderSchedule>(DEFAULT_WEEKLY_REMINDER);
+  const [weeklyReminderVisible, setWeeklyReminderVisible] = useState(false);
   const [permissionBlocked, setPermissionBlocked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -37,11 +43,13 @@ export default function SettingsScreen() {
     async function load() {
       try {
         const isEnabled = await repositories.notificationSettings.isEnabled();
+        const reminder = await repositories.notificationSettings.getWeeklyReminder();
         const permission = isEnabled ? await getNotificationPermissionInfo() : null;
 
         if (active) {
           setEnabled(isEnabled);
-          setPermissionBlocked(permission !== null && permission.state !== 'granted');
+          setWeeklyReminder(reminder);
+          setPermissionBlocked(permission?.state === 'denied');
         }
       } catch (error) {
         if (active) {
@@ -117,6 +125,24 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleWeeklyReminderSubmit = async (schedule: WeeklyReminderSchedule) => {
+    await repositories.notificationSettings.setWeeklyReminder(schedule);
+    setWeeklyReminder(schedule);
+
+    if (!enabled) {
+      setMessage('Preferência salva. Ative os lembretes para receber o aviso.');
+      return;
+    }
+
+    const result = await refreshScheduledNotifications();
+
+    if (result.error) {
+      throw new Error(`Preferência salva, mas não foi possível reagendar: ${result.error}`);
+    }
+
+    setMessage(`Lembrete atualizado para ${formatWeeklyReminder(schedule)}.`);
+  };
+
   return (
     <Screen scroll>
       <Stack.Screen options={{ title: 'Configurações' }} />
@@ -130,6 +156,20 @@ export default function SettingsScreen() {
           onValueChange={(value) => void handleToggle(value)}
           value={enabled}
         />
+
+        <View style={styles.schedule}>
+          <Text style={styles.scheduleLabel}>Lembrete de quilometragem</Text>
+          <Text style={styles.scheduleValue}>{formatWeeklyReminder(weeklyReminder)}</Text>
+          <Text style={styles.scheduleDescription}>
+            Escolha o dia da semana e o horário do aviso para atualizar o odômetro.
+          </Text>
+          <Button
+            disabled={loading || busy}
+            onPress={() => setWeeklyReminderVisible(true)}
+            title="Alterar dia e horário"
+            variant="secondary"
+          />
+        </View>
 
         {permissionBlocked ? (
           <View style={styles.warning}>
@@ -182,6 +222,13 @@ export default function SettingsScreen() {
           Os intervalos padrão são genéricos. O manual do fabricante prevalece.
         </Text>
       </Card>
+
+      <WeeklyReminderModal
+        onClose={() => setWeeklyReminderVisible(false)}
+        onSubmit={handleWeeklyReminderSubmit}
+        schedule={weeklyReminder}
+        visible={weeklyReminderVisible}
+      />
     </Screen>
   );
 }
@@ -200,6 +247,27 @@ const createStyles = (colors: Palette) =>
       color: colors.textMuted,
       fontSize: 14,
       lineHeight: 20,
+    },
+    schedule: {
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+      gap: spacing.sm,
+      paddingTop: spacing.md,
+    },
+    scheduleLabel: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    scheduleValue: {
+      color: colors.primary,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    scheduleDescription: {
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 16,
     },
     note: {
       backgroundColor: colors.surfaceMuted,

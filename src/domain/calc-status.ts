@@ -1,3 +1,4 @@
+import { resolveBaselineAt } from './baseline';
 import { calcNextDue } from './calc-next-due';
 import { differenceInUtcCalendarDays, parseIsoDate } from './date-utils';
 import type { MaintenanceItemSnapshot, MaintenanceStatus, VehicleSnapshot } from './types';
@@ -38,7 +39,7 @@ export function calcStatus(
 
   if (nextDue.dueAt !== null && item.intervalMonths !== null) {
     const dueDate = parseIsoDate(nextDue.dueAt);
-    const baselineDate = parseIsoDate(item.lastDoneAt ?? vehicle.odometerUpdatedAt);
+    const baselineDate = parseIsoDate(resolveBaselineAt(item, vehicle));
     const totalDays = differenceInUtcCalendarDays(dueDate, baselineDate);
     const elapsedDays = differenceInUtcCalendarDays(nowDate, baselineDate);
 
