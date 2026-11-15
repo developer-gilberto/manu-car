@@ -1,3 +1,4 @@
+import { DEFAULT_MAINTENANCE_ITEM_NAMES } from '@/data/db/default-maintenance-items';
 import { createTestDatabase } from '@/data/db/testing/test-database';
 import type { AppDatabase } from '@/data/db/types';
 import { LogRepository } from '@/data/repositories/log-repository';
@@ -24,6 +25,7 @@ describe('MaintenanceItemRepository', () => {
     expect(item.id).toBeGreaterThan(0);
     expect(item.vehicleId).toBe(vehicleId);
     expect(item.name).toBe('Pneus');
+    expect(item.description).toBeNull();
     expect(item.intervalKm).toBeNull();
     expect(item.intervalMonths).toBeNull();
     expect(item.lastDoneKm).toBeNull();
@@ -38,7 +40,7 @@ describe('MaintenanceItemRepository', () => {
     const item = repository.create({ vehicleId, name: 'Pneus' });
     const items = repository.listByVehicle(vehicleId);
 
-    expect(items).toHaveLength(14);
+    expect(items).toHaveLength(DEFAULT_MAINTENANCE_ITEM_NAMES.length + 1);
     expect(items.at(-1)).toEqual(item);
   });
 
@@ -54,6 +56,7 @@ describe('MaintenanceItemRepository', () => {
 
     const updated = repository.update(item.id, {
       name: 'Pneus dianteiros',
+      description: 'Pneus da frente, responsáveis por dirigir e frear.',
       intervalKm: 10000,
       intervalMonths: 12,
       lastDoneKm: 45000,
@@ -65,6 +68,7 @@ describe('MaintenanceItemRepository', () => {
     expect(updated).toMatchObject({
       id: item.id,
       name: 'Pneus dianteiros',
+      description: 'Pneus da frente, responsáveis por dirigir e frear.',
       intervalKm: 10000,
       intervalMonths: 12,
       lastDoneKm: 45000,
@@ -79,6 +83,7 @@ describe('MaintenanceItemRepository', () => {
     const item = repository.create({
       vehicleId,
       name: 'Pneus',
+      description: 'Descrição inicial.',
       intervalKm: 10000,
       intervalMonths: 12,
       lastDoneKm: 45000,
@@ -86,6 +91,7 @@ describe('MaintenanceItemRepository', () => {
     });
 
     const updated = repository.update(item.id, {
+      description: null,
       intervalKm: null,
       intervalMonths: null,
       lastDoneKm: null,
@@ -93,6 +99,7 @@ describe('MaintenanceItemRepository', () => {
     });
 
     expect(updated).toMatchObject({
+      description: null,
       intervalKm: null,
       intervalMonths: null,
       lastDoneKm: null,

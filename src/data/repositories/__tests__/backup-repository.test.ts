@@ -1,3 +1,4 @@
+import { DEFAULT_MAINTENANCE_ITEM_NAMES } from '@/data/db/default-maintenance-items';
 import { createTestDatabase } from '@/data/db/testing/test-database';
 import type { AppDatabase } from '@/data/db/types';
 import { BackupRepository } from '@/data/repositories/backup-repository';
@@ -51,7 +52,7 @@ describe('BackupRepository', () => {
     const data = repository.exportData();
 
     expect(data.vehicles).toHaveLength(1);
-    expect(data.maintenanceItems).toHaveLength(13);
+    expect(data.maintenanceItems).toHaveLength(DEFAULT_MAINTENANCE_ITEM_NAMES.length);
     expect(data.odometerReadings).toHaveLength(1);
     expect(data.maintenanceLogs).toHaveLength(1);
   });
@@ -110,6 +111,7 @@ describe('BackupRepository', () => {
           id: 60,
           vehicleId: 50,
           name: 'Óleo',
+          description: null,
           intervalKm: null,
           intervalMonths: null,
           lastDoneKm: null,

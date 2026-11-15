@@ -61,6 +61,7 @@ export type WeeklyReminderFormValues = z.infer<typeof weeklyReminderFormSchema>;
 
 export const itemFormSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome do item.').max(80, 'Use até 80 caracteres.'),
+  description: z.string().trim().max(500, 'Use até 500 caracteres.'),
   intervalKm: z.string().trim(),
   intervalMonths: z.string().trim(),
   lastDoneKm: z.string().trim(),

@@ -19,10 +19,12 @@ import {
   maskMonthsInput,
   unmaskDigits,
 } from '@/utils/input-masks';
+import { getMaintenanceItemDescription } from '@/utils/maintenance-item-descriptions';
 import { parseNonNegativeInteger, parsePositiveInteger } from '@/utils/numbers';
 
 export interface ItemFormOutput {
   name: string;
+  description: string | null;
   intervalKm: number | null;
   intervalMonths: number | null;
   lastDoneKm: number | null;
@@ -40,6 +42,7 @@ interface ItemFormProps {
 function getDefaultValues(item?: MaintenanceItem): ItemFormValues {
   return {
     name: item?.name ?? '',
+    description: item?.description ?? getMaintenanceItemDescription(item?.name ?? '') ?? '',
     intervalKm: kmToInput(item?.intervalKm),
     intervalMonths: item?.intervalMonths?.toString() ?? '',
     lastDoneKm: kmToInput(item?.lastDoneKm),
@@ -65,6 +68,7 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
     try {
       await onSubmit({
         name: values.name.trim(),
+        description: values.description.trim() === '' ? null : values.description.trim(),
         intervalKm:
           values.intervalKm === '' ? null : parsePositiveInteger(unmaskDigits(values.intervalKm)),
         intervalMonths:
@@ -97,6 +101,24 @@ export function ItemForm({ vehicle, item, submitLabel, onSubmit }: ItemFormProps
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             placeholder="Ex.: troca de óleo"
+            value={field.value}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="description"
+        render={({ field }) => (
+          <TextField
+            autoCapitalize="sentences"
+            error={errors.description?.message}
+            hint="Opcional. Explique para que serve o item e os benefícios de mantê-lo em dia."
+            label="Descrição"
+            multiline
+            onBlur={field.onBlur}
+            onChangeText={field.onChange}
+            placeholder="Ex.: lubrifica o motor e reduz o desgaste das peças."
             value={field.value}
           />
         )}

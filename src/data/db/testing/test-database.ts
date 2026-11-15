@@ -110,12 +110,14 @@ function createTestClient(): SQLiteDatabase {
   } as unknown as SQLiteDatabase;
 }
 
-export async function createTestDatabase(): Promise<AppDatabase> {
+export async function createTestDatabase(
+  bundle: typeof migrations = migrations,
+): Promise<AppDatabase> {
   const client = createTestClient();
   client.execSync('PRAGMA foreign_keys = ON;');
 
   const db = drizzle(client, { schema });
-  await migrate(db, migrations);
+  await migrate(db, bundle);
 
   return db;
 }

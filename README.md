@@ -113,7 +113,7 @@ App mobile pessoal que lembra o usuário das manutenções do carro (troca de ó
 
 - **Veículos**: cadastro e edição (nome, placa). Odômetro inicial 0 km. Suporte a mais de um veículo, com seletor na Home.
 - **Odômetro**: atualização da quilometragem atual por um modal. Leituras com data anterior são aceitas se o km for compatível com o histórico; apenas a leitura mais recente atualiza o odômetro do veículo.
-- **Itens de manutenção**: 13 itens padrão criados junto com cada veículo (óleo, filtros, correia dentada, velas, freios, bateria etc.). É possível criar, editar e configurar intervalo por km, por meses, ou ambos.
+- **Itens de manutenção**: 16 itens padrão criados junto com cada veículo (óleo, filtros, limpeza dos sensores MAP e MAF, limpeza da sonda lambda, correia dentada, velas de ignição, freios, bateria etc.). É possível criar, editar e configurar intervalo por km, por meses, ou ambos. Cada item tem uma descrição opcional sobre para que serve e os benefícios da manutenção: os itens padrão já vêm com texto e os itens personalizados podem receber o texto do usuário.
 - **Status por item**: `ok`, `atencao` (faltam pouco) e `vencido`, com badge colorido. A lista da Home é ordenada por urgência. Itens que nunca foram feitos recebem o selo "Nunca feito".
 - **Previsão**: quando há histórico de quilometragem, o app estima a data do próximo vencimento pela média de km rodados por dia (janela de 90 dias).
 - **Marcar como feito**: registra data, km, custo (opcional, em centavos) e observações. Atualiza a base de cálculo do próximo vencimento.
@@ -286,7 +286,8 @@ manu-car/
     │                         # notification-target.ts, initial-permission.ts,
     │                         # initial-permission-prompt.tsx
     ├── utils/                # date.ts, currency.ts, numbers.ts, errors.ts,
-    │                         # maintenance-view.ts, weekly-reminder.ts, input-masks.ts,
+    │                         # maintenance-view.ts, maintenance-item-descriptions.ts,
+    │                         # weekly-reminder.ts, input-masks.ts,
     │                         # backup-file.ts
     ├── types/                # Declaração de módulos (*.sql)
     └── theme.ts              # Paletas claro/escuro e helpers de estilo
@@ -359,7 +360,7 @@ A prop `mask` do `TextField` formata o texto a cada alteração. As funções s�
 | Intervalo em meses                             | Até 3 dígitos                | `12` → `12`               |
 | Hora e minuto do lembrete semanal              | Até 2 dígitos                | `9` → `9`                 |
 
-Nomes, observações e nome do veículo são texto livre e não têm máscara.
+Nomes, descrições, observações e nome do veículo são texto livre e não têm máscara.
 
 ---
 
@@ -367,20 +368,20 @@ Nomes, observações e nome do veículo são texto livre e não têm máscara.
 
 SQLite local, gerenciado por expo-sqlite e Drizzle. As chaves estrangeiras são ativadas com `PRAGMA foreign_keys`. As migrations rodam na inicialização, pelo `DatabaseGate`.
 
-| Tabela              | Colunas principais                                                                                                                                                  | Observações                                             |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `vehicles`          | `id`, `name`, `plate?`, `odometer_km`, `odometer_updated_at`                                                                                                        | Odômetro atual fica aqui                                |
-| `odometer_readings` | `id`, `vehicle_id` (FK), `km`, `read_at`                                                                                                                            | Histórico de leituras, usado na média diária            |
-| `maintenance_items` | `id`, `vehicle_id` (FK), `name`, `interval_km?`, `interval_months?`, `last_done_km?`, `last_done_at?`, `baseline_km?`, `baseline_at?`, `notify_enabled`, `archived` | Cascade ao excluir veículo. Baseline gravado na criação |
-| `maintenance_logs`  | `id`, `item_id` (FK), `done_at`, `km`, `cost_cents?`, `notes?`                                                                                                      | Histórico de execuções                                  |
+| Tabela              | Colunas principais                                                                                                                                                                  | Observações                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `vehicles`          | `id`, `name`, `plate?`, `odometer_km`, `odometer_updated_at`                                                                                                                        | Odômetro atual fica aqui                                |
+| `odometer_readings` | `id`, `vehicle_id` (FK), `km`, `read_at`                                                                                                                                            | Histórico de leituras, usado na média diária            |
+| `maintenance_items` | `id`, `vehicle_id` (FK), `name`, `description?`, `interval_km?`, `interval_months?`, `last_done_km?`, `last_done_at?`, `baseline_km?`, `baseline_at?`, `notify_enabled`, `archived` | Cascade ao excluir veículo. Baseline gravado na criação |
+| `maintenance_logs`  | `id`, `item_id` (FK), `done_at`, `km`, `cost_cents?`, `notes?`                                                                                                                      | Histórico de execuções                                  |
 
-Migrations atuais: `0000_warm_sway.sql` (esquema inicial) e `0001_bitter_zarda.sql` (adiciona `baseline_km`/`baseline_at` e preenche os itens existentes com a primeira leitura ou o odômetro do veículo).
+Migrations atuais: `0000_warm_sway.sql` (esquema inicial), `0001_bitter_zarda.sql` (adiciona `baseline_km`/`baseline_at` e preenche os itens existentes com a primeira leitura ou o odômetro do veículo), `0002_add_sensor_cleaning_items.sql` (acrescenta as limpezas dos sensores MAP e MAF e da sonda lambda aos veículos já existentes, sem duplicar itens), `0003_rename_velas_to_velas_de_ignicao.sql` (renomeia o item "velas" para "velas de ignição" nos veículos existentes) e `0004_add_maintenance_item_description.sql` (adiciona a coluna `description` aos itens de manutenção).
 
 ### Repositórios
 
 | Repositório                      | Métodos                                                                                                                                                            |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VehicleRepository`              | `create` (transação, cria o veículo e os 13 itens padrão), `list`, `getById`, `update`, `delete`                                                                   |
+| `VehicleRepository`              | `create` (transação, cria o veículo e os 16 itens padrão), `list`, `getById`, `update`, `delete`                                                                   |
 | `MaintenanceItemRepository`      | `create`, `listByVehicle`, `getById`, `update`, `delete`                                                                                                           |
 | `OdometerRepository`             | `create`, `listByVehicle`, `getById`, `latestForVehicle`, `update`, `delete`                                                                                       |
 | `LogRepository`                  | `create`, `listByItem`, `getById`, `update`, `delete`                                                                                                              |
@@ -406,8 +407,8 @@ Acesso via `getRepositories()` (`src/data/repositories/index.ts`), criado com `c
 
 Tela `src/app/backup.tsx`.
 
-- **Exportar**: gera o arquivo `manucar-backup-DD-MM-AAAA_EPOCH.json`, em que `EPOCH` é o timestamp Unix em milissegundos e a data é local. O conteúdo tem `schemaVersion: 2` e inclui o baseline dos itens. O arquivo é gravado no diretório de cache do app e o menu de compartilhamento do Android é aberto, para o usuário salvar onde quiser (Downloads, Google Drive etc.). Se o aparelho não puder compartilhar, o caminho do arquivo é mostrado.
-- **Importar**: o usuário escolhe um arquivo `.json` pelo seletor do sistema (`File.pickFileAsync`). Também aceita backups `schemaVersion: 1`, reconstruindo o baseline a partir da primeira leitura de cada veículo.
+- **Exportar**: gera o arquivo `manucar-backup-DD-MM-AAAA_EPOCH.json`, em que `EPOCH` é o timestamp Unix em milissegundos e a data é local. O conteúdo tem `schemaVersion: 3` e inclui o baseline e a descrição dos itens. O arquivo é gravado no diretório de cache do app e o menu de compartilhamento do Android é aberto, para o usuário salvar onde quiser (Downloads, Google Drive etc.). Se o aparelho não puder compartilhar, o caminho do arquivo é mostrado.
+- **Importar**: o usuário escolhe um arquivo `.json` pelo seletor do sistema (`File.pickFileAsync`). Também aceita backups `schemaVersion: 1` e `2`, reconstruindo o baseline e preenchendo a descrição vazia quando ela não existir.
 - O conteúdo é validado com zod e pela integridade referencial (ids duplicados, chaves inexistentes) antes de qualquer gravação. Um resumo é exibido e a importação precisa de confirmação.
 - A importação substitui todos os dados atuais numa única transação. Se algo falhar, nada é alterado.
 
@@ -427,7 +428,7 @@ Estrutura:
 - Repositórios e migrations são testados com SQLite em memória (`src/data/db/testing/test-database.ts`, via `node:sqlite`).
 - Cobertura excluída para `src/app` (rotas).
 
-Cobertura atual: domínio (7 arquivos), utils (7), forms (1), repositórios e backup (6), migrations (1), notificações (3) e o componente `WelcomeScreen` (não usado na navegação).
+Cobertura atual: domínio (7 arquivos), utils (8), forms (1), repositórios e backup (6), migrations (1), notificações (3) e o componente `WelcomeScreen` (não usado na navegação).
 
 Não há testes para as telas de `src/app` nem para os componentes de `src/components/ui`.
 

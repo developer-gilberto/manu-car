@@ -23,6 +23,7 @@ describe('vehicle form schema', () => {
 describe('item form schema', () => {
   const validValues = {
     name: 'Óleo',
+    description: 'Lubrifica e protege o motor.',
     intervalKm: '10000',
     intervalMonths: '',
     lastDoneKm: '45000',
@@ -316,6 +317,7 @@ describe('input masks with form schemas', () => {
   it('aceita intervalos e km da última manutenção formatados', () => {
     const result = createItemFormSchema(50000).safeParse({
       name: 'Óleo',
+      description: '',
       intervalKm: '10.000',
       intervalMonths: '6',
       lastDoneKm: '45.000',

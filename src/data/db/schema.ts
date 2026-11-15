@@ -29,6 +29,7 @@ export const maintenanceItems = sqliteTable(
       .notNull()
       .references(() => vehicles.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    description: text('description'),
     intervalKm: integer('interval_km'),
     intervalMonths: integer('interval_months'),
     lastDoneKm: integer('last_done_km'),

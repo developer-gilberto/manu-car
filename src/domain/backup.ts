@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 /** Versão atual do formato de backup. Incremente ao mudar o formato. */
-export const BACKUP_SCHEMA_VERSION = 2;
+export const BACKUP_SCHEMA_VERSION = 3;
 
-const SUPPORTED_BACKUP_VERSIONS = [1, 2] as const;
+const SUPPORTED_BACKUP_VERSIONS = [1, 2, 3] as const;
 
 const isoDateTime = z.iso.datetime({ message: 'data ISO 8601 inválida' });
 const nonNegativeInt = z
@@ -44,6 +44,10 @@ const maintenanceItemSchemaV2 = maintenanceItemSchemaV1.extend({
   baselineAt: isoDateTime.nullable(),
 });
 
+const maintenanceItemSchemaV3 = maintenanceItemSchemaV2.extend({
+  description: z.string().trim().max(500).nullable(),
+});
+
 const maintenanceLogSchema = z.object({
   id: positiveId,
   itemId: positiveId,
@@ -63,7 +67,7 @@ export const backupV1Schema = z.object({
 });
 
 export const backupV2Schema = z.object({
-  schemaVersion: z.literal(BACKUP_SCHEMA_VERSION),
+  schemaVersion: z.literal(2),
   exportedAt: isoDateTime,
   vehicles: z.array(vehicleSchema),
   odometerReadings: z.array(odometerReadingSchema),
@@ -71,15 +75,25 @@ export const backupV2Schema = z.object({
   maintenanceLogs: z.array(maintenanceLogSchema),
 });
 
+export const backupV3Schema = z.object({
+  schemaVersion: z.literal(BACKUP_SCHEMA_VERSION),
+  exportedAt: isoDateTime,
+  vehicles: z.array(vehicleSchema),
+  odometerReadings: z.array(odometerReadingSchema),
+  maintenanceItems: z.array(maintenanceItemSchemaV3),
+  maintenanceLogs: z.array(maintenanceLogSchema),
+});
+
 export type BackupV1 = z.infer<typeof backupV1Schema>;
 export type BackupV2 = z.infer<typeof backupV2Schema>;
+export type BackupV3 = z.infer<typeof backupV3Schema>;
 export type BackupVehicle = z.infer<typeof vehicleSchema>;
 export type BackupOdometerReading = z.infer<typeof odometerReadingSchema>;
-export type BackupMaintenanceItem = z.infer<typeof maintenanceItemSchemaV2>;
+export type BackupMaintenanceItem = z.infer<typeof maintenanceItemSchemaV3>;
 export type BackupMaintenanceLog = z.infer<typeof maintenanceLogSchema>;
 
 /** Conteúdo do banco, sem metadados de versão. */
-export type BackupData = Omit<BackupV2, 'schemaVersion' | 'exportedAt'>;
+export type BackupData = Omit<BackupV3, 'schemaVersion' | 'exportedAt'>;
 
 export type BackupErrorCode =
   'INVALID_JSON' | 'NOT_A_BACKUP' | 'UNSUPPORTED_VERSION' | 'INVALID_CONTENT' | 'INTEGRITY';
@@ -90,7 +104,7 @@ export interface BackupError {
   details: string[];
 }
 
-export type ParseBackupResult = { ok: true; backup: BackupV2 } | { ok: false; error: BackupError };
+export type ParseBackupResult = { ok: true; backup: BackupV3 } | { ok: false; error: BackupError };
 
 export interface BackupSummary {
   exportedAt: string;
@@ -133,7 +147,7 @@ function upgradeV1ToV2(backup: BackupV1): BackupV2 {
   const earliestReadings = earliestReadingsByVehicle(backup.odometerReadings);
 
   return {
-    schemaVersion: BACKUP_SCHEMA_VERSION,
+    schemaVersion: 2,
     exportedAt: backup.exportedAt,
     vehicles: backup.vehicles,
     odometerReadings: backup.odometerReadings,
@@ -152,7 +166,15 @@ function upgradeV1ToV2(backup: BackupV1): BackupV2 {
   };
 }
 
-export function buildBackup(data: BackupData, exportedAt: string): BackupV2 {
+function upgradeV2ToV3(backup: BackupV2): BackupV3 {
+  return {
+    ...backup,
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    maintenanceItems: backup.maintenanceItems.map((item) => ({ ...item, description: null })),
+  };
+}
+
+export function buildBackup(data: BackupData, exportedAt: string): BackupV3 {
   return {
     schemaVersion: BACKUP_SCHEMA_VERSION,
     exportedAt,
@@ -163,7 +185,7 @@ export function buildBackup(data: BackupData, exportedAt: string): BackupV2 {
   };
 }
 
-export function serializeBackup(backup: BackupV2): string {
+export function serializeBackup(backup: BackupV3): string {
   return JSON.stringify(backup, null, 2);
 }
 
@@ -248,14 +270,14 @@ export function parseBackup(text: string): ParseBackupResult {
 
   const version = (raw as { schemaVersion: unknown }).schemaVersion;
 
-  if (version !== 1 && version !== 2) {
+  if (version !== 1 && version !== 2 && version !== 3) {
     return fail(
       'UNSUPPORTED_VERSION',
-      `Versão de backup desconhecida (${String(version)}). Este app lê as versões ${SUPPORTED_BACKUP_VERSIONS.join(' e ')}. Atualize o app para importar este arquivo.`,
+      `Versão de backup desconhecida (${String(version)}). Este app lê as versões ${SUPPORTED_BACKUP_VERSIONS.join(', ')}. Atualize o app para importar este arquivo.`,
     );
   }
 
-  let backup: BackupV2;
+  let backup: BackupV3;
 
   if (version === 1) {
     const parsedV1 = backupV1Schema.safeParse(raw);
@@ -268,8 +290,8 @@ export function parseBackup(text: string): ParseBackupResult {
       );
     }
 
-    backup = upgradeV1ToV2(parsedV1.data);
-  } else {
+    backup = upgradeV2ToV3(upgradeV1ToV2(parsedV1.data));
+  } else if (version === 2) {
     const parsedV2 = backupV2Schema.safeParse(raw);
 
     if (!parsedV2.success) {
@@ -280,7 +302,19 @@ export function parseBackup(text: string): ParseBackupResult {
       );
     }
 
-    backup = parsedV2.data;
+    backup = upgradeV2ToV3(parsedV2.data);
+  } else {
+    const parsedV3 = backupV3Schema.safeParse(raw);
+
+    if (!parsedV3.success) {
+      return fail(
+        'INVALID_CONTENT',
+        'O backup tem campos inválidos.',
+        describeZodIssues(parsedV3.error),
+      );
+    }
+
+    backup = parsedV3.data;
   }
 
   const problems = findBackupIntegrityProblems(backup);
@@ -292,7 +326,7 @@ export function parseBackup(text: string): ParseBackupResult {
   return { ok: true, backup };
 }
 
-export function summarizeBackup(backup: BackupV2): BackupSummary {
+export function summarizeBackup(backup: BackupV3): BackupSummary {
   return {
     exportedAt: backup.exportedAt,
     vehicles: backup.vehicles.length,

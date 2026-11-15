@@ -21,6 +21,7 @@ import { type Palette, spacing, useThemedStyles } from '@/theme';
 import { formatCents } from '@/utils/currency';
 import { formatDate, formatKm } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
+import { getMaintenanceItemDescription } from '@/utils/maintenance-item-descriptions';
 import {
   buildMaintenanceItemView,
   getDueSummary,
@@ -198,6 +199,9 @@ export default function ItemDetailScreen() {
 
   const dueLines = view ? getDueSummary(view) : [];
   const estimatedLabel = view ? getEstimatedLabel(view) : null;
+  const description = data
+    ? (data.item.description ?? getMaintenanceItemDescription(data.item.name))
+    : null;
 
   return (
     <Screen scroll>
@@ -238,6 +242,7 @@ export default function ItemDetailScreen() {
                 <StatusBadge status={view.status} />
               </View>
             </View>
+            {description ? <Text style={styles.itemDescription}>{description}</Text> : null}
             <View style={styles.dueList}>
               {dueLines.map((line) => (
                 <Text key={line} style={styles.dueText}>
@@ -341,6 +346,11 @@ const createStyles = (colors: Palette) =>
       fontSize: 22,
       fontWeight: '700',
       textTransform: 'capitalize',
+    },
+    itemDescription: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
     },
     badges: {
       alignItems: 'center',

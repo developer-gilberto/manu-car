@@ -7,6 +7,7 @@ import type { AppDatabase } from '@/data/db/types';
 export interface CreateMaintenanceItemInput {
   vehicleId: number;
   name: string;
+  description?: string | null;
   intervalKm?: number | null;
   intervalMonths?: number | null;
   lastDoneKm?: number | null;
@@ -20,6 +21,7 @@ export interface CreateMaintenanceItemInput {
 
 export interface UpdateMaintenanceItemInput {
   name?: string;
+  description?: string | null;
   intervalKm?: number | null;
   intervalMonths?: number | null;
   lastDoneKm?: number | null;
@@ -46,6 +48,7 @@ export class MaintenanceItemRepository {
       .values({
         vehicleId: input.vehicleId,
         name: input.name,
+        description: input.description ?? null,
         intervalKm: input.intervalKm ?? null,
         intervalMonths: input.intervalMonths ?? null,
         lastDoneKm: input.lastDoneKm ?? null,
@@ -82,6 +85,7 @@ export class MaintenanceItemRepository {
     const values: UpdateMaintenanceItemInput = {};
 
     if (input.name !== undefined) values.name = input.name;
+    if (input.description !== undefined) values.description = input.description;
     if (input.intervalKm !== undefined) values.intervalKm = input.intervalKm;
     if (input.intervalMonths !== undefined) values.intervalMonths = input.intervalMonths;
     if (input.lastDoneKm !== undefined) values.lastDoneKm = input.lastDoneKm;

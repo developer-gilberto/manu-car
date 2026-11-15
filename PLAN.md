@@ -23,12 +23,12 @@
 |---|---|
 | `vehicles` | id, name, plate?, odometerKm, odometerUpdatedAt |
 | `odometer_readings` | id, vehicleId, km, readAt |
-| `maintenance_items` | id, vehicleId, name, intervalKm?, intervalMonths?, lastDoneKm?, lastDoneAt?, notifyEnabled, archived |
+| `maintenance_items` | id, vehicleId, name, description?, intervalKm?, intervalMonths?, lastDoneKm?, lastDoneAt?, notifyEnabled, archived |
 | `maintenance_logs` | id, itemId, doneAt, km, costCents?, notes? |
 
 Dinheiro sempre em **centavos (inteiro)**, nunca float.
 
-**Itens pré-cadastrados (editáveis):** óleo do motor, filtro de óleo, filtro de ar, filtro de combustível, filtro de cabine, correia dentada, velas, pastilhas de freio, fluido de freio, líquido de arrefecimento, rodízio de pneus, alinhamento/balanceamento, bateria.
+**Itens pré-cadastrados (editáveis):** óleo do motor, filtro de óleo, filtro de ar, filtro de combustível, filtro de cabine, limpeza do sensor MAP, limpeza do sensor MAF, limpeza da sonda lambda, correia dentada, velas de ignição, pastilhas de freio, fluido de freio, líquido de arrefecimento, rodízio de pneus, alinhamento/balanceamento, bateria.
 
 Os intervalos padrão são só sugestão genérica. **O manual do seu carro manda**, e a UI deve avisar isso.
 
@@ -106,10 +106,12 @@ Rode typecheck, lint e testes, faça o commit e pare.
 
 > Ajuste posterior: máscaras de entrada (data, quilometragem, custo, placa) aplicadas aos formulários. Ver README, seção "Máscaras de entrada".
 
+> Ajuste posterior: itens padrão têm descrição predefinida e o cadastro/edição de item permite descrição opcional, inclusive para itens personalizados. Ver README, seção "Funcionalidades".
+
 1. **Home:** lista de itens ordenada por urgência, com badge de status e "faltam X km / Y dias".
-2. **Detalhe do item:** histórico de execuções e botão "Marcar como feito" (pede km, data, custo, observação).
+2. **Detalhe do item:** nome, descrição, histórico de execuções e botão "Marcar como feito" (pede km, data, custo, observação).
 3. **Atualizar odômetro:** modal rápido, acessível da Home.
-4. **Cadastro/edição de item** e de veículo (validação com zod).
+4. **Cadastro/edição de item** (com descrição opcional) e de veículo (validação com zod).
 5. **Configurações:** notificações, exportar/importar.
 
 **Aceite:** fluxo manual completo: criar veículo → atualizar km → marcar manutenção → status muda.

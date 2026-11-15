@@ -3,12 +3,17 @@
 import journal from './meta/_journal.json';
 import m0000 from './0000_warm_sway.sql';
 import m0001 from './0001_bitter_zarda.sql';
+import m0002 from './0002_add_sensor_cleaning_items.sql';
+import m0003 from './0003_rename_velas_to_velas_de_ignicao.sql';
+import m0004 from './0004_add_maintenance_item_description.sql';
 
-  export default {
-    journal,
-    migrations: {
-      m0000,
-      m0001
-    }
-  }
-  
+export default {
+  journal,
+  migrations: {
+    m0000,
+    m0001,
+    m0002,
+    m0003,
+    m0004,
+  },
+};

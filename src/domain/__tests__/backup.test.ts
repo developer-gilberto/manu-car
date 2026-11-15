@@ -31,6 +31,7 @@ const data: BackupData = {
       lastDoneAt: null,
       baselineKm: 45_000,
       baselineAt: '2026-02-20T10:00:00.000Z',
+      description: 'Lubrifica e protege o motor.',
       notifyEnabled: true,
       archived: false,
     },
@@ -91,14 +92,14 @@ describe('backup', () => {
 
   it('rejeita versão desconhecida sem tentar interpretar o conteúdo', () => {
     const future = JSON.parse(validText());
-    future.schemaVersion = 3;
+    future.schemaVersion = 4;
 
     const result = parseBackup(JSON.stringify(future));
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe('UNSUPPORTED_VERSION');
-      expect(result.error.message).toContain('3');
+      expect(result.error.message).toContain('4');
       expect(result.error.message).toContain(String(BACKUP_SCHEMA_VERSION));
     }
   });
@@ -117,7 +118,22 @@ describe('backup', () => {
       expect(result.backup.maintenanceItems[0]).toMatchObject({
         baselineKm: 45_000,
         baselineAt: '2026-02-20T10:00:00.000Z',
+        description: null,
       });
+    }
+  });
+
+  it('importa backup v2 preenchendo descrição vazia', () => {
+    const legacy = JSON.parse(validText());
+    legacy.schemaVersion = 2;
+    delete legacy.maintenanceItems[0].description;
+
+    const result = parseBackup(JSON.stringify(legacy));
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.backup.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
+      expect(result.backup.maintenanceItems[0]?.description).toBeNull();
     }
   });
 

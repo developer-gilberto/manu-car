@@ -21,7 +21,7 @@ O ManuCar ("aplicativo") é um aplicativo para lembrar manutenções do veículo
 O aplicativo armazena localmente apenas as informações que você digita:
 
 - Dados dos veículos cadastrados (nome, placa opcional, quilometragem atual e registros de leitura do odômetro).
-- Tipos de manutenção, intervalos configurados e histórico de manutenções realizadas (datas, quilometragem e, se informados, valores em reais).
+- Tipos de manutenção, descrições opcionais, intervalos configurados e histórico de manutenções realizadas (datas, quilometragem e, se informados, valores em reais).
 - Preferências de notificação: se os lembretes estão ativados e o dia e horário do lembrete semanal.
 
 Você não é obrigado a informar nenhum dado além do necessário para o funcionamento do app.
