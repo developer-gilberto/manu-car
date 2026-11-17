@@ -222,7 +222,7 @@ eas build --platform android --profile production
 Observações:
 
 - `app.config.js` aplica `blockedPermissions` **somente** em builds do EAS (detectados pela variável `EAS_BUILD_PROFILE`). A lista remove permissões de rede, armazenamento externo e de badges de launchers. Builds locais de desenvolvimento não são afetados, porque precisam de rede para falar com o Metro.
-- O `versionCode` (`app.json`, `android.versionCode`) deve ser incrementado a cada envio à Play Store.
+- O `versionCode` (`app.json`, `android.versionCode`) deve ser incrementado a cada envio à Play Store. O perfil `production` usa `autoIncrement: true`, então o EAS incrementa o `versionCode` automaticamente a cada build; para envios manuais, garanta que ele seja maior que qualquer código já aceito pelo Play Console.
 - A política de privacidade está em `docs/politica-de-privacidade.md`. A Play Store exige uma URL pública para ela.
 
 ---

@@ -2,7 +2,7 @@
   "expo": {
     "name": "ManuCar",
     "slug": "manu-car",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icons/icon-ManuCar.png",
     "scheme": "manucar",
@@ -19,7 +19,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.gilberto.manucar",
-      "versionCode": 1
+      "versionCode": 3
     },
     "web": {
       "output": "server",
@@ -27,6 +27,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-status-bar",
       [
         "expo-splash-screen",
         {
